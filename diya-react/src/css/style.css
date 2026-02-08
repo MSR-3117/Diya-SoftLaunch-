@@ -305,7 +305,7 @@ section {
 
 /* Three Zones - Removed for Full Screen Scatter */
 
-/* Mascot */
+/* Mascot - COMMENTED: Collides with DiyaMascot component inline styles
 .diya-mascot {
     position: absolute;
     top: 50%;
@@ -318,6 +318,7 @@ section {
     opacity: 0;
     will-change: transform, opacity;
 }
+*/
 
 /* Processing Unit */
 .processing-unit {

@@ -5,6 +5,11 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import '../css/content-direction.css';
 import ModernButton from './ui/ModernButton';
 import SystemNav from './SystemNav';
+import AbstractBackground from './AbstractBackground';
+import HandwrittenDecor from './HandwrittenDecor';
+
+// Register Layout Plugin
+gsap.registerPlugin(ScrollTrigger);
 
 // Icons (Simple SVGs)
 const Icons = {
@@ -49,282 +54,282 @@ export default function ContentDirection() {
     }, [freqMode]);
 
     const adjustFreq = (delta) => {
-        const min = 1;
-        const max = freqMode === 'week' ? 7 : 30;
-        setFreqValue(v => Math.min(Math.max(v + delta, min), max));
+        setFreqValue(prev => {
+            const next = prev + delta;
+            // Limits
+            if (freqMode === 'week') {
+                if (next < 1) return 1;
+                if (next > 7) return 7;
+            } else {
+                if (next < 1) return 1;
+                if (next > 30) return 30; // Max 30/month
+            }
+            return next;
+        });
     };
 
-    // THE DELEGATION ACTION
+    // Explosion Effect Logic
+    const triggerExplosion = (rect, iconString, color) => {
+        const count = 12;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+
+        for (let i = 0; i < count; i++) {
+            const particle = document.createElement('div');
+            particle.classList.add('explosion-particle');
+
+            // Random checkmark or icon piece
+            particle.innerHTML = Math.random() > 0.5 ? '✓' :
+                `<div style="transform: scale(0.5);">${iconString}</div>`;
+
+            document.body.appendChild(particle);
+
+            // Set Initial Position
+            gsap.set(particle, {
+                position: 'fixed',
+                left: centerX,
+                top: centerY,
+                xPercent: -50,
+                yPercent: -50,
+                color: color,
+                fontSize: Math.random() * 10 + 10 + 'px',
+                zIndex: 9999,
+                pointerEvents: 'none'
+            });
+
+            // Animate
+            const angle = Math.random() * Math.PI * 2;
+            const velocity = Math.random() * 80 + 40;
+            const duration = Math.random() * 0.5 + 0.5;
+
+            gsap.to(particle, {
+                x: Math.cos(angle) * velocity,
+                y: Math.sin(angle) * velocity,
+                opacity: 0,
+                rotation: Math.random() * 360,
+                duration: duration,
+                ease: "power2.out",
+                onComplete: () => particle.remove()
+            });
+        }
+    };
+
+    // Handle "Let DIYA plan"
     const handleDelegate = () => {
         if (selectedPlatforms.length === 0) {
-            alert("Please select at least one platform.");
+            alert("Please select at least one platform first!");
             return;
         }
+
         setIsProcessing(true);
+
+        // 1. Initial State for Loader
+        gsap.set(loaderRef.current, { display: 'flex', opacity: 0 });
+        gsap.set(progressRef.current, { width: '0%' });
+
+        const tl = gsap.timeline();
+
+        // 2. Fade Out Content
+        tl.to('.direction-content, .direction-header', {
+            opacity: 0,
+            y: -20,
+            duration: 0.5,
+            ease: "power2.in"
+        })
+            // 3. Fade In Loader
+            .to(loaderRef.current, {
+                opacity: 1,
+                duration: 0.5
+            })
+            // 4. Progress Bar Animation
+            .to(progressRef.current, {
+                width: '100%',
+                duration: 2.5,
+                ease: "power1.inOut"
+            })
+            // 5. Text Updates
+            .to(loaderTextRef.current, {
+                text: "Analyzing Audience...",
+                duration: 0.1,
+                delay: -2
+            })
+            .to(loaderTextRef.current, {
+                text: "Generating Schedule...",
+                duration: 0.1,
+                delay: -1
+            })
+            // 6. Navigate
+            .call(() => {
+                // Save state if needed (context/redux)
+                console.log("Plan:", { platforms: selectedPlatforms, freq: `${freqValue}/${freqMode}` });
+                navigate('/brand-calendar'); // Or wherever next step is
+            });
     };
 
-    // --- ENTRANCE ANIMATION (SUPER COOL VERSION) ---
+    // Background Float Animation for "How Should DIYA Run"
     useLayoutEffect(() => {
-        const ctx = gsap.context(() => {
-            // Initial States
-            gsap.set('.system-nav', { y: -20, opacity: 0 });
-            gsap.set('.direction-header h1 .word', { y: 80, opacity: 0, rotation: 5 });
+        let ctx = gsap.context(() => {
 
-            // Explicitly set 0 width and padding to start
-            gsap.set('.diya-super-box', { width: 0, padding: 0, opacity: 1 });
-            gsap.set('.diya-super-box .char', { y: 40, opacity: 0 });
-            gsap.set('.direction-content', { y: 40, opacity: 0 });
-            gsap.set('.sub-char', { y: 20, opacity: 0 }); // Initial state for sub-header chars
+            // 1. PRE-SET Text Positions (Critical for mask effect)
+            gsap.set(".word, .box-word", { yPercent: 110 }); // Hide below invisible box
 
-            const tl = gsap.timeline({ delay: 0.1 });
-
-            // 1. Navigation Drops In
-            tl.to('.system-nav', { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" });
-
-            // 2. Header Words (Explosive Entry)
-            // Target all .word elements (excluding the ones in the box for now)
-            tl.to('.direction-header h1 > .word', {
-                y: 0,
-                opacity: 1,
-                rotation: 0,
+            // 2. Animate Header Words (Masked Reveal)
+            gsap.to(".word", {
+                yPercent: 0,
                 duration: 1.2,
                 stagger: 0.1,
-                ease: "power4.out"
-            }, "-=0.3");
+                ease: "power4.out", // Sharp, premium ease
+                delay: 0.2
+            });
 
-            // 2b. Sub-header Text Entry (Slide Up + Fade) - SYNCED WITH HEADER
-            // Appears alongside the main header text
-            tl.to('.sub-char', {
-                y: 0,
-                opacity: 1,
+            // 3. The Sequential Reveal (Text -> Box Wipe)
+            const boxTl = gsap.timeline({ delay: 0.6 });
+
+            // A. Initial State: Box BG hidden (width 0), Text hidden
+            gsap.set(".diya-box-bg", { width: "0%" }); // Reset width explicitly
+
+            // B. Text "Masked Reveal" Entry (Box Words) - Step 1
+            // Text slides up while box is still transparent (Green on BG)
+            boxTl.to(".box-word", {
+                yPercent: 0,
                 duration: 0.8,
-                stagger: 0.02,
-                ease: "power2.out"
-            }, "<0.2"); // Start 0.2s after Header starts
+                stagger: 0.1,
+                ease: "power4.out"
+            })
 
-            // Measure Width for Smoothness
-            const box = document.querySelector('.diya-super-box');
-            // Temporarily unset width to get natural size
-            gsap.set(box, { width: 'auto', padding: '0 0.4em' });
-            const finalWidth = box.offsetWidth + 2; // +2px buffer for subpixel rounding
-            // Reset to 0
-            gsap.set(box, { width: 0, padding: 0 });
-
-            // 3. Highlight Box Expands (Pre-calc Pixel Width)
-            tl.to('.diya-super-box', {
-                width: finalWidth,
-                padding: '0 0.4em',
-                duration: 1.2,
-                ease: "power2.inOut"
-            }, "-=1.0");
-
-            // 4. Text Inside Box (Fade In)
-            tl.to('.diya-super-box span', {
-                opacity: 1,
-                y: 0,
-                duration: 0.7,
-                stagger: 0.05,
-                ease: "back.out(1.2)"
-            }, "-=0.5");
-
-            // 5. The Shine (Flash)
-            tl.fromTo('.diya-super-box::after',
-                { left: '-100%' },
-                { left: '200%', duration: 0.6, ease: "power2.inOut" },
-                "-=0.1"
-            );
-
-            // 7. Grid & Sections Fade In
-            tl.to('.direction-content', {
-                y: 0,
-                opacity: 1,
-                duration: 1,
-                ease: "power2.out"
-            }, "-=0.5");
-
-            gsap.registerPlugin(ScrollTrigger);
-
-            // ... (Previous animations kept but ensuring ScrollTrigger logic is added)
-
-            // 9. Scroll Animations for Frequency Section
-            // Title
-            gsap.fromTo('.frequency-section .section-title',
-                { y: 30, opacity: 0 },
-                {
-                    y: 0,
-                    opacity: 1,
+                // C. Box Background Wipe (Left to Right) - Step 2
+                // Happens AFTER text is revealed
+                .to(".diya-box-bg", {
+                    width: "100%", // Animate to full width
                     duration: 0.8,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: '.frequency-section',
-                        start: "top 85%",
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
+                    ease: "power2.inOut" // Smooth, linear-ish wipe
+                }, "+=0.0") // Strict sequence (start after text finishes)
 
-            // Toggle Switch
-            gsap.fromTo('.frequency-control',
-                { scale: 0.8, opacity: 0 },
-                {
-                    scale: 1,
-                    opacity: 1,
-                    duration: 0.6,
-                    ease: "back.out(1.7)",
-                    scrollTrigger: {
-                        trigger: '.frequency-section',
-                        start: "top 80%",
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
+                // D. Flash/Shine Effect (Rapid Sweep)
+                .fromTo(".diya-super-box::after",
+                    { x: "-100%" },
+                    { x: "200%", duration: 0.6, ease: "power2.inOut" },
+                    "-=0.4"
+                );
 
-            // Counter
-            gsap.fromTo('.freq-value-selector',
-                { y: 20, opacity: 0 },
-                {
-                    y: 0,
-                    opacity: 1,
-                    duration: 0.6,
-                    delay: 0.2,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: '.frequency-section',
-                        start: "top 80%",
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
-
-            // 10. CTA Button Scroll Animation
-            gsap.fromTo('.delegation-section',
-                { y: 40, opacity: 0 },
-                {
-                    y: 0,
-                    opacity: 1,
-                    duration: 0.8,
-                    ease: "power2.out",
-                    scrollTrigger: {
-                        trigger: '.delegation-section',
-                        start: "top 95%", // Trigger almost at bottom
-                        toggleActions: "play none none reverse"
-                    }
-                }
-            );
-
-            // 8. Looping Sub-header (Green Wave)
-            // Staggered color cycle for "shimmer" effect - Starts after entry
-            gsap.to('.sub-char', {
-                color: '#00c237', // Brand Green
-                duration: 1.5,
+            // 4. Subtext Cinematic Blur Entry
+            gsap.from(".sub-char", {
+                opacity: 0,
+                scale: 1.5,
+                filter: "blur(10px)",
+                y: 10,
                 stagger: {
-                    each: 0.03,
-                    repeat: -1,
-                    yoyo: true,
+                    amount: 0.5,
                     from: "start"
                 },
-                ease: "sine.inOut",
-                delay: 0.5 // Minimal delay after entry
+                duration: 0.8,
+                delay: 1.2,
+                ease: "power2.out"
+            });
+
+            // 5. Scroll Animations
+            const sections = gsap.utils.toArray('.direction-section, .delegation-section');
+            sections.forEach((section, i) => {
+                gsap.from(section, {
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 85%",
+                        toggleActions: "play none none reverse"
+                    },
+                    y: 60,
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power3.out",
+                    delay: i * 0.1
+                });
             });
 
         }, containerRef);
         return () => ctx.revert();
     }, []);
 
-    // --- PARTICLE BURST LOGIC ---
-    const triggerExplosion = (rect, iconSvg, color) => {
-        // Create fewer, high-quality particles (3-4)
-        const particleCount = 4;
-
-        for (let i = 0; i < particleCount; i++) {
-            const particle = document.createElement('div');
-            particle.innerHTML = iconSvg; // Inject SVG
-
-            // Random start position near center
-            const startX = rect.left + rect.width / 2;
-            const startY = rect.top + rect.height / 2;
-
-            // Randomize spread
-            const randomX = (Math.random() - 0.5) * 150; // Wider horizontal spread
-            const apexY = startY - 200 - Math.random() * 100; // Go higher
-            const dropY = window.innerHeight + 100; // Fall off screen
-
-            // Style the particle wrapper
-            Object.assign(particle.style, {
-                position: 'fixed',
-                left: `${startX}px`,
-                top: `${startY}px`,
-                width: '32px', // Slightly larger for "High Quality" feel
-                height: '32px',
-                color: color,
-                pointerEvents: 'none',
-                zIndex: 9999,
-                opacity: 0,
-                transform: 'translate(-50%, -50%)' // Center anchor
-            });
-
-            document.body.appendChild(particle);
-
-            // GSAP Physics Simulation (Projectile Motion)
-            // We use a single timeline but animate X and Y with different eases to create a curve
-            const tl = gsap.timeline({
-                onComplete: () => particle.remove()
-            });
-
-            const duration = 1.5 + Math.random() * 0.5;
-
-            tl.set(particle, { opacity: 1, scale: 0 })
-                .to(particle, {
-                    scale: 1,
-                    duration: 0.2,
-                    ease: "back.out(1.2)"
-                }, 0)
-                .to(particle, {
-                    x: randomX,
-                    duration: duration,
-                    ease: "power1.out" // Linear-ish horizontal drift
-                }, 0)
-                .to(particle, {
-                    y: -300 - Math.random() * 100, // Upward burst
-                    duration: duration * 0.4,
-                    ease: "power2.out" // Decelerate up
-                }, 0)
-                .to(particle, {
-                    y: window.innerHeight - startY + 100, // Downward fall (relative to start)
-                    duration: duration * 0.6,
-                    ease: "power2.in" // Accelerate down
-                }, ">") // Append immediately after up
-                .to(particle, {
-                    rotation: (Math.random() - 0.5) * 720,
-                    duration: duration,
-                    ease: "none"
-                }, 0);
-        }
-    };
-
-    // Helper text for sub-header
+    // Helper text
     const subText = "Set the direction once. DIYA handles the rest.";
 
-    // ... (Loader logic remains same)
+    // Mask Wrapper Helper (Main Header)
+    const WrappedWord = ({ children }) => (
+        <span style={{
+            display: 'inline-block',
+            overflow: 'hidden',
+            verticalAlign: 'bottom',
+            lineHeight: '1.1',
+            paddingBottom: '0.1em'
+        }}>
+            <span className="word" style={{ display: 'inline-block' }}>{children}</span>
+        </span>
+    );
 
     return (
         <div className="direction-page" ref={containerRef}>
+            {/* ATMOSPHERE LAYERS */}
+            <div className="atmosphere-background"></div>
+            <div className="noise-overlay"></div>
+
+            {/* GSAP ALIVE BACKGROUND */}
+            <AbstractBackground />
+
+            {/* HANDWRITTEN DECOR (Arrows & Notes) */}
+            <HandwrittenDecor />
+
             {/* Navigation */}
             <SystemNav step={2} totalSteps={3} onBack={() => navigate('/brand-persona')} />
 
             {/* Header */}
             <header className="direction-header">
                 <h1>
-                    <span className="word">HOW</span>{' '}
-                    <span className="word">SHOULD</span>{' '}
-                    <span className="word">DIYA</span>{' '}
-                    <span className="word">RUN</span>{' '}
+                    <WrappedWord>HOW</WrappedWord>{' '}
+                    <WrappedWord>SHOULD</WrappedWord>{' '}
+                    <WrappedWord>DIYA</WrappedWord>{' '}
+                    <WrappedWord>RUN</WrappedWord>{' '}
                     <br className="mobile-break" />
                     {/* The Kinetic Box around YOUR CONTENT */}
-                    <span className="diya-super-box">
-                        <span>YOUR</span>
-                        {/* Gap handles spacing now */}
-                        <span>CONTENT?</span>
+                    <span
+                        className="diya-super-box"
+                        style={{ backgroundColor: 'transparent' }} /* Override CSS BG */
+                    >
+                        {/* SEPARATE BACKGROUND LAYER FOR WIPE ANIMATION */}
+                        {/* Using explicit style to ensure it starts at 0 if GSAP delays */}
+                        <div className="diya-box-bg" style={{ width: 0 }}></div>
+
+                        {/* MASKED WORDS INSIDE BOX */}
+                        <span style={{
+                            overflow: 'hidden',
+                            display: 'inline-block',
+                            verticalAlign: 'middle',
+                            height: '1.4em',  /* Increased for anti-clip */
+                            position: 'relative',
+                            top: '0.15em', /* Adjusted centering */
+                            paddingLeft: '0.05em', /* Prevent Left Clip */
+                            paddingRight: '0.05em', /* Prevent Right Clip */
+                            zIndex: 2, /* Above BG */
+                            transform: 'skewX(0deg)', // Reset skew for wrapper
+                            fontWeight: 'normal' // Reset weight for wrapper
+                        }}>
+                            <span className="box-word" style={{ display: 'inline-block' }}>YOUR</span>
+                        </span>
+
+                        {/* Spacer Removed to use CSS gap */}
+
+                        <span style={{
+                            overflow: 'hidden',
+                            display: 'inline-block',
+                            verticalAlign: 'middle',
+                            height: '1.4em',
+                            position: 'relative',
+                            top: '0.15em',
+                            paddingLeft: '0.05em',
+                            paddingRight: '0.05em',
+                            zIndex: 2,
+                            transform: 'skewX(0deg)', // Reset skew for wrapper
+                            fontWeight: 'normal'
+                        }}>
+                            <span className="box-word" style={{ display: 'inline-block' }}>CONTENT?</span>
+                        </span>
                     </span>
                 </h1>
                 <p className="direction-sub">
