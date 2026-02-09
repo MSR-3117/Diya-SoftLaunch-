@@ -67,6 +67,40 @@ export async function generateCalendar(brandData, tone = 'professional') {
 }
 
 /**
+ * Generate AI-powered content posts
+ * @param {Object} brandData - Brand data from analysis
+ * @param {Array<string>} platforms - Platform IDs (instagram, linkedin, x, facebook)
+ * @param {string} frequency - Posts frequency like "3/week" or "12/month"
+ * @returns {Promise<Array>} Generated posts with title, caption, image_url, platform, scheduled_date
+ */
+export async function generateContent(brandData, platforms, frequency) {
+    const response = await fetch(`${API_BASE_URL}/calendar/generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            brand_data: brandData,
+            platforms: platforms,
+            frequency: frequency
+        }),
+    });
+
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `API request failed with status ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.success) {
+        throw new Error(data.error || 'Content generation failed');
+    }
+
+    return data.posts || data.calendar || [];
+}
+
+/**
  * Health check for backend connection
  * @returns {Promise<boolean>} True if backend is healthy
  */

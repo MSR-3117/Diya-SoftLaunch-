@@ -323,9 +323,9 @@
     position: relative;
     z-index: 1;
     width: 450px;
-    max-height: 80vh;
+    max-height: 90vh;
     border-radius: 24px;
-    overflow: hidden;
+    overflow-y: auto;
     background: #fff;
     border: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 194, 55, 0.1);
@@ -397,6 +397,47 @@
     background: #ede7f6;
     color: #7b1fa2;
     border: 1px solid rgba(123, 31, 162, 0.2);
+}
+
+/* Caption Display */
+.spotlight-caption {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.spotlight-caption-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.5rem;
+}
+
+.spotlight-caption-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #333;
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.spotlight-caption-text::-webkit-scrollbar {
+    width: 4px;
+}
+
+.spotlight-caption-text::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.spotlight-caption-text::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
 }
 
 .spotlight-actions {

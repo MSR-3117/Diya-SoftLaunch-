@@ -3,6 +3,294 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Any
 import json
 import os
+import random
+
+# TODO: Add your Gemini API key here
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
+
+# Pollination.ai API key (optional but recommended for no rate limits)
+# Get your key from: enter.pollinations.ai
+POLLINATION_API_KEY = os.getenv('POLLINATION_API_KEY', '')
+USE_POLLINATION = True  # Set to False to disable AI image generation
+
+
+def generate_posts_for_calendar(
+    brand_data: Dict[str, Any],
+    platforms: List[str],
+    num_posts: int = 3,
+    tone: str = 'professional'
+) -> List[Dict[str, Any]]:
+    """
+    Generate calendar posts using Gemini AI (with fallbacks).
+    
+    Args:
+        brand_data: Brand information from scraping
+        platforms: List of platform IDs (instagram, linkedin, x, facebook)
+        num_posts: Number of posts to generate per week
+        tone: Content tone (professional, casual, inspirational, educational, playful)
+    
+    Returns:
+        List of post objects with id, title, caption, image_url, platform, scheduled_date, color
+    """
+    try:
+        posts = []
+        brand_name = brand_data.get('name', 'Brand')
+        brand_summary = brand_data.get('content_summary', brand_data.get('description', ''))
+        available_images = brand_data.get('images', [])
+        
+        # Generate scheduled dates (spread across the week)
+        today = datetime.now()
+        schedule_days = distribute_posts_across_week(num_posts)
+        
+        # Color palette for visual variety
+        colors = ['pink', 'green', 'yellow', 'purple', 'blue']
+        
+        # Generate content using Gemini (or fallback)
+        if GEMINI_API_KEY:
+            # TODO: Implement actual Gemini API call
+            # posts = generate_with_gemini(brand_data, platforms, num_posts, tone)
+            pass
+        
+        # Fallback: Generate mock content for now (API to be added)
+        for i in range(num_posts):
+            platform = platforms[i % len(platforms)] if platforms else 'instagram'
+            
+            # Schedule at a reasonable posting time (9am-12pm)
+            post_hour = 9 + (i % 4)  # 9am, 10am, 11am, 12pm
+            schedule_date = (today + timedelta(days=schedule_days[i])).replace(
+                hour=post_hour, 
+                minute=0, 
+                second=0, 
+                microsecond=0
+            )
+            
+            # Generate content based on brand
+            post_content = generate_fallback_post_content(
+                brand_name=brand_name,
+                brand_summary=brand_summary,
+                platform=platform,
+                tone=tone,
+                post_number=i + 1
+            )
+            
+            # Get or generate image
+            image_url = None
+            if available_images and i < len(available_images):
+                image_url = available_images[i]
+            elif USE_POLLINATION:
+                # Generate image using Pollination.ai (free, no API key required)
+                image_url = generate_image_with_pollination(
+                    description=post_content['title'],
+                    brand_name=brand_name,
+                    platform=platform
+                )
+            
+            posts.append({
+                'id': i + 1,
+                'title': post_content['title'],
+                'caption': post_content['caption'],
+                'image_url': image_url,
+                'platform': platform,
+                'scheduled_date': schedule_date.isoformat(),
+                'color': colors[i % len(colors)]
+            })
+        
+        return posts
+        
+    except Exception as e:
+        print(f"Error generating posts: {e}")
+        return generate_minimal_fallback_posts(brand_data, platforms, num_posts)
+
+
+def distribute_posts_across_week(num_posts: int) -> List[int]:
+    """Distribute posts evenly across the week (days 0-6)."""
+    if num_posts <= 0:
+        return []
+    if num_posts >= 7:
+        return list(range(7))
+    
+    # Spread posts evenly, favoring weekdays
+    weekday_preference = [1, 2, 3, 4, 5, 0, 6]  # Mon-Fri, then Sun, Sat
+    return weekday_preference[:num_posts]
+
+
+def generate_fallback_post_content(
+    brand_name: str,
+    brand_summary: str,
+    platform: str,
+    tone: str,
+    post_number: int
+) -> Dict[str, str]:
+    """Generate fallback content when AI is unavailable."""
+    
+    # Platform-specific formats
+    platform_formats = {
+        'instagram': {
+            'titles': ['Behind the Scenes', 'Product Spotlight', 'Customer Story', 'Team Feature', 'Tips & Tricks'],
+            'hashtags': True,
+            'max_length': 2200
+        },
+        'linkedin': {
+            'titles': ['Industry Insights', 'Team Achievement', 'Thought Leadership', 'Company Update', 'Career Opportunities'],
+            'hashtags': False,
+            'max_length': 3000
+        },
+        'x': {
+            'titles': ['Quick Tip', 'Daily Inspiration', 'Hot Take', 'Question for You', 'Breaking News'],
+            'hashtags': True,
+            'max_length': 280
+        },
+        'facebook': {
+            'titles': ['Community Update', 'Event Announcement', 'Fan Feature', 'Weekly Roundup', 'Success Story'],
+            'hashtags': False,
+            'max_length': 5000
+        }
+    }
+    
+    format_info = platform_formats.get(platform, platform_formats['instagram'])
+    titles = format_info['titles']
+    
+    title = titles[(post_number - 1) % len(titles)]
+    
+    # Generate caption based on tone
+    tone_intros = {
+        'professional': f"At {brand_name}, we believe in",
+        'casual': f"Hey friends! {brand_name} here with",
+        'inspirational': f"Dream big with {brand_name}.",
+        'educational': f"Did you know? {brand_name} brings you",
+        'playful': f"Guess what? {brand_name} has something fun!"
+    }
+    
+    intro = tone_intros.get(tone, tone_intros['professional'])
+    
+    caption = f"{intro} excellence and innovation every day. {title.lower()} - this is what drives us forward. Stay tuned for more updates!"
+    
+    if format_info['hashtags']:
+        caption += f"\n\n#{brand_name.replace(' ', '')} #ContentCreation #SocialMedia"
+    
+    return {
+        'title': title,
+        'caption': caption
+    }
+
+
+def generate_minimal_fallback_posts(
+    brand_data: Dict[str, Any],
+    platforms: List[str],
+    num_posts: int
+) -> List[Dict[str, Any]]:
+    """Absolute minimal fallback when everything fails."""
+    brand_name = brand_data.get('name', 'Your Brand')
+    posts = []
+    today = datetime.now()
+    colors = ['pink', 'green', 'yellow', 'purple', 'blue']
+    
+    for i in range(num_posts):
+        platform = platforms[i % len(platforms)] if platforms else 'instagram'
+        posts.append({
+            'id': i + 1,
+            'title': f'Post {i + 1}',
+            'caption': f'Exciting content from {brand_name}! Stay tuned for more updates.',
+            'image_url': None,
+            'platform': platform,
+            'scheduled_date': (today + timedelta(days=i)).isoformat(),
+            'color': colors[i % len(colors)]
+        })
+    
+    return posts
+
+
+# ===============================================
+# PLACEHOLDER: Gemini API Integration
+# ===============================================
+# TODO: Add Gemini API key to .env and implement this function
+def generate_with_gemini(
+    brand_data: Dict[str, Any],
+    platforms: List[str],
+    num_posts: int,
+    tone: str
+) -> List[Dict[str, Any]]:
+    """
+    Generate posts using Google Gemini API.
+    
+    To implement:
+    1. Add GEMINI_API_KEY to your .env file
+    2. Install google-generativeai: pip install google-generativeai
+    3. Uncomment and implement this function
+    """
+    # import google.generativeai as genai
+    # genai.configure(api_key=GEMINI_API_KEY)
+    # model = genai.GenerativeModel('gemini-pro')
+    # 
+    # prompt = f'''Generate {num_posts} social media posts for {brand_data.get('name')}.
+    # Platforms: {platforms}
+    # Tone: {tone}
+    # Brand info: {brand_data.get('content_summary', '')}
+    # 
+    # Return as JSON array with: title, caption, platform, scheduled_date'''
+    # 
+    # response = model.generate_content(prompt)
+    # return json.loads(response.text)
+    pass
+
+
+# ===============================================
+# Pollination.ai Image Generation
+# ===============================================
+def generate_image_with_pollination(description: str, brand_name: str, platform: str = 'instagram') -> str:
+    """
+    Generate image using Pollination.ai API.
+    
+    Uses API key if available (for no rate limits), otherwise falls back to free tier.
+    
+    Args:
+        description: Content description/title
+        brand_name: Name of the brand
+        platform: Target platform for sizing hints
+        
+    Returns:
+        URL to the generated image
+    """
+    try:
+        from urllib.parse import quote
+        
+        # Platform-specific aspect hints
+        aspect_hints = {
+            'instagram': 'square format, 1:1 aspect ratio',
+            'linkedin': 'professional, landscape format',
+            'x': 'wide format, 16:9 aspect ratio',
+            'facebook': 'social media friendly'
+        }
+        
+        aspect = aspect_hints.get(platform, 'square format')
+        
+        # Create a descriptive prompt for the image
+        prompt = f"Professional social media image for {brand_name}, {description}, modern clean aesthetic, {aspect}, high quality, vibrant colors, no text overlay"
+        
+        # URL-encode the prompt (replace spaces with underscores for cleaner URLs)
+        encoded_prompt = quote(prompt.replace(' ', '_'))
+        
+        # Adding a seed based on the prompt for consistency
+        seed = hash(prompt) % 100000
+        
+        # Build the URL with API key if available
+        base_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
+        params = f"seed={seed}&width=1024&height=1024"
+        
+        # Add API key for no rate limits if available
+        if POLLINATION_API_KEY:
+            params += f"&key={POLLINATION_API_KEY}"
+            print(f"Using Pollination API with authentication")
+        
+        image_url = f"{base_url}?{params}"
+        
+        return image_url
+        
+    except Exception as e:
+        print(f"Error generating Pollination image: {e}")
+        return ""
+
+
 
 def generate_image_with_dalle(content_description: str, brand_name: str, style: str = "professional") -> str:
     """

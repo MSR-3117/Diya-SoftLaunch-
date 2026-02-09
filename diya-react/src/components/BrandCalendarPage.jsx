@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import gsap from 'gsap';
 import CalendarSidebar from './ui/CalendarSidebar';
 import { PLATFORMS_DATA } from './ui/PlatformIcons';
+import { useBrand } from '../context/BrandContext';
 import '../css/calendar.css';
 
 // Mock data for placeholder posts with colorful variants
@@ -67,6 +68,7 @@ function getMonthDays(year, month) {
 
 export default function BrandCalendarPage() {
     const location = useLocation();
+    const { generatedPosts, brandData } = useBrand();
     const previousState = location.state || {};
 
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -85,6 +87,43 @@ export default function BrandCalendarPage() {
     const monthDays = getMonthDays(year, month);
 
     const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+    // Use generated posts from context, or fallback to mock data
+    const posts = generatedPosts && generatedPosts.length > 0
+        ? generatedPosts.map((post, index) => {
+            // Parse scheduled_date to get day and dayOfWeek
+            const scheduledDate = post.scheduled_date ? new Date(post.scheduled_date) : new Date();
+            const startHour = scheduledDate.getHours() + scheduledDate.getMinutes() / 60;
+
+            return {
+                id: post.id || index + 1,
+                day: scheduledDate.getDate(),
+                month: scheduledDate.getMonth(),
+                year: scheduledDate.getFullYear(),
+                dayOfWeek: scheduledDate.getDay(),
+                scheduledDate: scheduledDate, // Keep full date for filtering
+                startHour: startHour || 9,
+                duration: 1.5,
+                title: post.title || 'Post',
+                time: scheduledDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+                image: post.image_url || null,
+                platform: post.platform || 'instagram',
+                color: post.color || ['pink', 'green', 'yellow', 'purple', 'blue'][index % 5],
+                caption: post.caption || ''
+            };
+        })
+        : MOCK_POSTS;
+
+    // Debug logging
+    console.log('Posts available:', posts.length, posts.map(p => ({
+        title: p.title,
+        day: p.day,
+        month: p.month,
+        year: p.year,
+        scheduledDate: p.scheduledDate?.toISOString(),
+        dayOfWeek: p.dayOfWeek
+    })));
+    console.log('Week dates:', weekDates.map(d => ({ date: d.getDate(), month: d.getMonth(), year: d.getFullYear() })));
 
     // Entry animation
     useEffect(() => {
@@ -145,13 +184,28 @@ export default function BrandCalendarPage() {
         setCurrentDate(new Date());
     };
 
-    const getPostsForDay = (dayOfWeek) => {
-        return MOCK_POSTS.filter(p => p.dayOfWeek === dayOfWeek);
+    // Get posts for a specific date in week view
+    const getPostsForWeekDay = (date) => {
+        return posts.filter(p => {
+            if (p.scheduledDate) {
+                return p.scheduledDate.getDate() === date.getDate() &&
+                    p.scheduledDate.getMonth() === date.getMonth() &&
+                    p.scheduledDate.getFullYear() === date.getFullYear();
+            }
+            // Fallback for mock data that only has dayOfWeek
+            return p.dayOfWeek === date.getDay();
+        });
     };
 
     const getPostsForMonthDay = (day, isCurrentMonth) => {
         if (!isCurrentMonth) return [];
-        return MOCK_POSTS.filter(p => p.day === day);
+        return posts.filter(p => {
+            if (p.month !== undefined && p.year !== undefined) {
+                return p.day === day && p.month === month && p.year === year;
+            }
+            // Fallback for mock data
+            return p.day === day;
+        });
     };
 
     const isToday = (date) => {
@@ -201,11 +255,11 @@ export default function BrandCalendarPage() {
 
                 {/* Day Columns */}
                 {weekDates.map((date, dayIndex) => {
-                    const posts = getPostsForDay(dayIndex);
+                    const dayPosts = getPostsForWeekDay(date);
 
                     return (
                         <div key={dayIndex} className="day-column">
-                            {posts.map(post => {
+                            {dayPosts.map(post => {
                                 const topPosition = (post.startHour - 6) * 100;
                                 const height = post.duration * 100;
 
@@ -285,7 +339,7 @@ export default function BrandCalendarPage() {
 
     // Render Day View
     const renderDayView = () => {
-        const dayPosts = MOCK_POSTS.filter(p => p.day === currentDate.getDate());
+        const dayPosts = posts.filter(p => p.day === currentDate.getDate());
 
         return (
             <div className="day-view-container" ref={gridRef}>
@@ -438,6 +492,14 @@ export default function BrandCalendarPage() {
                             <div className="spotlight-tags">
                                 <span className="spotlight-tag blue">Scheduled</span>
                                 <span className="spotlight-tag yellow">Auto-post</span>
+                            </div>
+
+                            {/* Full Caption */}
+                            <div className="spotlight-caption">
+                                <h4 className="spotlight-caption-label">Caption</h4>
+                                <p className="spotlight-caption-text">
+                                    {selectedPost.caption || 'No caption available for this post.'}
+                                </p>
                             </div>
 
                             <div className="spotlight-actions">

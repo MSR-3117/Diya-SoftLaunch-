@@ -7,6 +7,7 @@ import ModernButton from './ui/ModernButton';
 import SystemNav from './SystemNav';
 import AbstractBackground from './AbstractBackground';
 import HandwrittenDecor from './HandwrittenDecor';
+import { useBrand } from '../context/BrandContext';
 
 // Register Layout Plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -28,6 +29,7 @@ const PLATFORMS = [
 
 export default function ContentDirection() {
     const navigate = useNavigate();
+    const { setContentSettings } = useBrand();
     const [selectedPlatforms, setSelectedPlatforms] = useState([]);
     const [freqMode, setFreqMode] = useState('week'); // 'week' | 'month'
     const [freqValue, setFreqValue] = useState(3);
@@ -160,14 +162,13 @@ export default function ContentDirection() {
             })
             // 6. Navigate
             .call(() => {
-                // Save state if needed (context/redux)
-                console.log("Plan:", { platforms: selectedPlatforms, freq: `${freqValue}/${freqMode}` });
-                navigate('/generating-plan', {
-                    state: {
-                        platforms: selectedPlatforms,
-                        frequency: `${freqValue}/${freqMode}`
-                    }
+                // Save settings to context before navigation
+                setContentSettings({
+                    platforms: selectedPlatforms,
+                    frequency: `${freqValue}/${freqMode}`
                 });
+                console.log("Plan:", { platforms: selectedPlatforms, freq: `${freqValue}/${freqMode}` });
+                navigate('/generating-plan');
             });
     };
 

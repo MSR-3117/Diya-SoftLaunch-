@@ -98,34 +98,52 @@ def analyze_brand():
 
 @calendar_bp.route('/generate', methods=['POST'])
 def generate_calendar():
-    """Generate 7-day content calendar"""
+    """Generate content calendar based on platforms and frequency"""
     try:
         data = request.json
-        # Client sends brand_data, but we prefer the server-side one if available
-        # or use what client sent if checks pass
         
+        # Get platforms and frequency from request
+        platforms = data.get('platforms', ['instagram'])
+        frequency = data.get('frequency', '3/week')  # e.g., "3/week" or "12/month"
+        
+        # Parse frequency
+        parts = frequency.split('/')
+        num_posts = int(parts[0]) if len(parts) >= 1 else 3
+        period = parts[1] if len(parts) >= 2 else 'week'
+        
+        # If monthly, convert to weekly amount
+        if period == 'month':
+            num_posts = max(1, num_posts // 4)
+        
+        # Get brand data from server store or client
         brand_data = None
-        
-        # Try to get from server store
         brand_id = session.get('brand_id')
         if brand_id and brand_id in BRAND_DATA_STORE:
             brand_data = BRAND_DATA_STORE[brand_id]
         
-        # Fallback to client provided data
         if not brand_data:
-             brand_data = data.get('brand_data')
+            brand_data = data.get('brand_data')
              
         tone = data.get('tone', 'professional')
         
         if not brand_data:
             return jsonify({'error': 'Brand data is required (session expired or invalid)'}), 400
         
-        # Generate AI-powered content calendar
-        calendar_content = generate_weekly_content(brand_data, tone)
+        # Import the content generator
+        from app.content_generator import generate_posts_for_calendar
+        
+        # Generate posts using Gemini (or fallback)
+        posts = generate_posts_for_calendar(
+            brand_data=brand_data,
+            platforms=platforms,
+            num_posts=num_posts,
+            tone=tone
+        )
         
         return jsonify({
             'success': True,
-            'calendar': calendar_content
+            'posts': posts,
+            'calendar': posts  # backward compatibility
         })
     
     except Exception as e:
