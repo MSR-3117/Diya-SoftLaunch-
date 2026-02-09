@@ -82,6 +82,9 @@ def generate_posts_for_calendar(
             # posts = generate_with_gemini(brand_data, platforms, num_posts, tone)
             pass
         
+        # Try to use OpenAI for high-quality text generation if available
+        OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+        
         # Fallback: Generate mock content for now (API to be added)
         for i in range(num_posts):
             platform = platforms[i % len(platforms)] if platforms else 'instagram'
@@ -96,13 +99,29 @@ def generate_posts_for_calendar(
             )
             
             # Generate content based on brand
-            post_content = generate_fallback_post_content(
-                brand_name=brand_name,
-                brand_summary=brand_summary,
-                platform=platform,
-                tone=tone,
-                post_number=i + 1
-            )
+            post_content = None
+            
+            # 1. Try OpenAI first
+            if OPENAI_API_KEY:
+                try:
+                    post_content = generate_text_with_openai(
+                        brand_name=brand_name,
+                        brand_summary=brand_summary,
+                        platform=platform,
+                        tone=tone
+                    )
+                except Exception as e:
+                    print(f"OpenAI generation failed: {e}")
+            
+            # 2. Key available but failed, or no key -> Use fallback
+            if not post_content:
+                post_content = generate_fallback_post_content(
+                    brand_name=brand_name,
+                    brand_summary=brand_summary,
+                    platform=platform,
+                    tone=tone,
+                    post_number=i + 1
+                )
             
             # Get or generate image
             image_url = None
@@ -321,6 +340,56 @@ def generate_image_with_pollination(description: str, brand_name: str, platform:
         print(f"Error generating Pollination image: {e}")
         return ""
 
+
+
+# ===============================================
+# OpenAI Text Generation
+# ===============================================
+def generate_text_with_openai(
+    brand_name: str,
+    brand_summary: str,
+    platform: str,
+    tone: str
+) -> Dict[str, str]:
+    """
+    Generate high-quality post content using OpenAI.
+    Prioritizes brand name and relevance.
+    """
+    try:
+        client = openai.OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        
+        system_prompt = f"""You are a professional social media manager for the brand "{brand_name}".
+Your goal is to create highly relevant, engaging content based on the brand's summary: "{brand_summary}".
+Tone: {tone}.
+Platform: {platform}.
+
+CRITICAL INSTRUCTIONS:
+1. ALWAYS use the exact brand name "{brand_name}" in the text.
+2. The content MUST be relevant to what the brand actually does (based on summary).
+3. Do not invent generic facts. Use the summary as the source of truth.
+4. Return JSON with 'title' (max 5 words) and 'caption' (appropriate length for platform).
+"""
+
+        user_prompt = f"Write a {platform} post for {brand_name} about a relevant topic for their audience."
+        
+        response = client.chat.completions.create(
+            model="gpt-4o",  # Use a smart model
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.7
+        )
+        
+        content = json.loads(response.choices[0].message.content)
+        return {
+            'title': content.get('title', 'Brand Update'),
+            'caption': content.get('caption', '')
+        }
+    except Exception as e:
+        print(f"Error generating text with OpenAI: {e}")
+        return None
 
 
 def generate_image_with_dalle(content_description: str, brand_name: str, style: str = "professional") -> str:
