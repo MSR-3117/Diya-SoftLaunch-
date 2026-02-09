@@ -400,12 +400,15 @@
 }
 
 /* Caption Display */
-.spotlight-caption {
+.spotlight-caption-section {
     margin-top: 1rem;
     padding: 1rem;
     background: #f8f9fa;
     border-radius: 12px;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
 .spotlight-caption-label {
@@ -414,10 +417,9 @@
     color: #888;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
 }
 
-.spotlight-caption-text {
+.spotlight-caption-content {
     font-size: 0.9rem;
     line-height: 1.6;
     color: #333;
@@ -427,15 +429,15 @@
     word-break: break-word;
 }
 
-.spotlight-caption-text::-webkit-scrollbar {
+.spotlight-caption-content::-webkit-scrollbar {
     width: 4px;
 }
 
-.spotlight-caption-text::-webkit-scrollbar-track {
+.spotlight-caption-content::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.spotlight-caption-text::-webkit-scrollbar-thumb {
+.spotlight-caption-content::-webkit-scrollbar-thumb {
     background: #ccc;
     border-radius: 2px;
 }

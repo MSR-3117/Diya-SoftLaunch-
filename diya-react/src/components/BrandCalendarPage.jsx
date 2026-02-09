@@ -271,7 +271,10 @@ export default function BrandCalendarPage() {
                                             top: `${topPosition}px`,
                                             height: `${height}px`
                                         }}
-                                        onClick={() => setSelectedPost(post)}
+                                        onClick={() => {
+                                            console.log('Selected post:', post);
+                                            setSelectedPost(post);
+                                        }}
                                     >
                                         <div className="post-card-title">{post.title}</div>
                                         <div className="post-card-time">{post.time}</div>
@@ -495,11 +498,16 @@ export default function BrandCalendarPage() {
                             </div>
 
                             {/* Full Caption */}
-                            <div className="spotlight-caption">
+                            {/* Full Caption */}
+                            <div className="spotlight-caption-section">
                                 <h4 className="spotlight-caption-label">Caption</h4>
-                                <p className="spotlight-caption-text">
-                                    {selectedPost.caption || 'No caption available for this post.'}
-                                </p>
+                                <div className="spotlight-caption-content">
+                                    {selectedPost.caption ? selectedPost.caption : (
+                                        <span style={{ fontStyle: 'italic', color: '#999' }}>
+                                            No caption generated for this post.
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="spotlight-actions">
