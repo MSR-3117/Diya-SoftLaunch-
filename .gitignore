@@ -1,0 +1,5 @@
+
+# Environment files with secrets
+brand_content_studio/.env
+brand_content_studio/venv/
+*.env
