@@ -14,6 +14,36 @@ POLLINATION_API_KEY = os.getenv('POLLINATION_API_KEY', '')
 USE_POLLINATION = True  # Set to False to disable AI image generation
 
 
+def clean_brand_name(raw_name: str) -> str:
+    """
+    Extract a clean brand name from a long title string.
+    Example: "AI Solutions | DCI" -> "DCI"
+    """
+    if not raw_name:
+        return "Brand"
+        
+    # Common separators
+    separators = ['|', ' - ', ' – ', ':', '•']
+    
+    # Check if any separator exists
+    for sep in separators:
+        if sep in raw_name:
+            parts = [p.strip() for p in raw_name.split(sep)]
+            # Usually the brand name is the shortest part, or the last part
+            # Filter out generic terms
+            valid_parts = [p for p in parts if len(p) > 1 and 'home' not in p.lower()]
+            if valid_parts:
+                # Return the shortest valid part (most likely the brand name)
+                return min(valid_parts, key=len)
+    
+    # If no separators, or just one long string
+    if len(raw_name) > 30:
+        # Try to take the first few words? Or just start
+        return raw_name[:30] + "..."
+        
+    return raw_name
+
+
 def generate_posts_for_calendar(
     brand_data: Dict[str, Any],
     platforms: List[str],
@@ -34,7 +64,8 @@ def generate_posts_for_calendar(
     """
     try:
         posts = []
-        brand_name = brand_data.get('name', 'Brand')
+        raw_name = brand_data.get('name', 'Brand')
+        brand_name = clean_brand_name(raw_name)
         brand_summary = brand_data.get('content_summary', brand_data.get('description', ''))
         available_images = brand_data.get('images', [])
         
