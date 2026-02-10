@@ -1,3 +1,4 @@
+import os
 import requests
 import json
 from typing import Dict, Any
@@ -77,4 +78,3 @@ def fetch_brand_assets(brand_name: str) -> Dict[str, Any]:
     except Exception as e:
         raise Exception(f"Failed to fetch brand assets: {str(e)}")
 
-import os

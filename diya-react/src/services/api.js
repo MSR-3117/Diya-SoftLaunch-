@@ -1,7 +1,10 @@
 // API Service for DIYA React Frontend
 // Communicates with brand_content_studio Flask backend
 
-const API_BASE_URL = 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://msr3117.pythonanywhere.com';
+
+// Debug: log the API URL on load (visible in browser console)
+console.log('[DIYA] API Base URL:', API_BASE_URL);
 
 /**
  * Analyze brand from URL
