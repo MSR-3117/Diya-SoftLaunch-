@@ -10,3 +10,7 @@ diya-AIscrap/.env
 diya-AIscrap/__pycache__/
 diya-AIscrap/app/__pycache__/
 diya-AIscrap/app/services/__pycache__/
+diya-AIscrap/static/generated/
+
+# OS specific
+.DS_Store

@@ -1,16 +1,15 @@
 """
-Fast Brand Asset Extractor — 3-Layer Pipeline
+Fast Brand Asset Extractor — 2-Layer Pipeline (No Chromium)
 
-Layer 1: HTTP + BeautifulSoup (text, logo, CSS colors, fonts) — ~1-2s
-Layer 2: Playwright computed styles (supplement) — ~3-5s (parallel)
-Layer 3: Gemini Flash text-only (summary, strategy, vibe) — ~3-5s (parallel)
+Layer 1: HTTP + BeautifulSoup (text, logo, CSS colors, fonts) — ~1-3s
+         Also fetches external CSS files for colors/fonts
+Layer 2: Gemini Flash text-only (summary, strategy, vibe, colors, fonts) — ~3-5s
 
-Total: ~7-12s (vs ~30-45s with screenshot-based approach)
+Total: ~4-8s (no browser launch needed)
 """
 import re
 import asyncio
-import base64
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
 
@@ -19,161 +18,200 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 from app.models.brand_assets import BrandAssets, ColorPalette, FontInfo, ExtractedLogo, StrategicAnalysis
-from app.services.browser_service import BrowserService
 from app.services.gemini_service import GeminiService
 
 load_dotenv()
 
+# Generic font families to skip
+GENERIC_FONTS = {
+    "inherit", "initial", "unset", "revert", "sans-serif", "serif",
+    "monospace", "cursive", "fantasy", "system-ui", "ui-sans-serif",
+    "ui-serif", "ui-monospace", "-apple-system", "blinkmacsystemfont",
+    "segoe ui", "arial", "helvetica", "times new roman", "times",
+    "courier new", "courier", "verdana", "georgia", "tahoma",
+    # Emoji & symbol fonts
+    "apple color emoji", "segoe ui emoji", "segoe ui symbol",
+    "noto color emoji", "noto emoji", "android emoji",
+    "emojisymbols", "symbola",
+    # System mono fonts
+    "sfmono-regular", "sf mono", "menlo", "consolas", "monaco",
+    "liberation mono", "lucida console", "dejavu sans mono",
+    "droid sans mono", "ubuntu mono", "source code pro",
+    # Other system fonts
+    "roboto", "noto sans", "liberation sans", "cantarell",
+    "fira sans", "droid sans", "oxygen", "ubuntu",
+}
+
+def _is_valid_font(name: str) -> bool:
+    """Check if a font name is a real font (not a CSS variable or generic)."""
+    if not name:
+        return False
+    lower = name.lower().strip()
+    # Remove !important suffix properly
+    if lower.endswith("!important"):
+        lower = lower[:-10].strip()
+    if not lower:
+        return False
+    # Skip CSS variables
+    if lower.startswith("var(") or lower.startswith("--"):
+        return False
+    # Skip generic font families
+    if lower in GENERIC_FONTS:
+        return False
+    # Skip names containing emoji/symbol/icon keywords
+    if any(kw in lower for kw in ("emoji", "symbol", "icon")):
+        return False
+    # Skip very short names
+    if len(lower) < 3:
+        return False
+    # Skip names with special chars (malformed CSS)
+    if lower.endswith(")") or lower.endswith('"') or "!" in lower:
+        return False
+    return True
+
 
 class AssetExtractor:
-    """Fast brand asset extractor using 3-layer parallel pipeline."""
+    """Fast brand asset extractor — pure HTTP + Gemini, no browser."""
 
     def __init__(self):
-        self.browser_service = BrowserService()
         self.gemini_service = GeminiService()
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         }
 
     async def extract_assets(self, url: str) -> BrandAssets:
-        """
-        Main extraction pipeline — 3 layers running in parallel.
-        """
+        """Main extraction — 2 layers, no Chromium needed."""
         if not url.startswith(("http://", "https://")):
             url = f"https://{url}"
 
         import time
         start_time = time.time()
         print(f"\n{'='*60}")
-        print(f"⚡ FAST BRAND ANALYSIS: {url}")
+        print(f"⚡ FAST BRAND ANALYSIS (no browser): {url}")
         print(f"{'='*60}")
 
-        # ═══════════════════════════════════════════════════════
-        # LAYER 1: HTTP + BeautifulSoup (synchronous, fast)
-        # ═══════════════════════════════════════════════════════
-        print("  📡 Layer 1: Fetching HTML...")
+        # ═══════════════════════════════════════════════════
+        # LAYER 1: HTTP + BeautifulSoup + External CSS
+        # ═══════════════════════════════════════════════════
+        print("  📡 Layer 1: Fetching HTML + CSS...")
         layer1_start = time.time()
 
         html_content = ""
         final_url = url
-        async with httpx.AsyncClient(headers=self.headers, follow_redirects=True, timeout=10.0) as client:
+        async with httpx.AsyncClient(
+            headers=self.headers, follow_redirects=True, timeout=15.0
+        ) as client:
             try:
                 response = await client.get(url)
                 html_content = response.text
                 final_url = str(response.url)
             except Exception as e:
                 print(f"  ⚠️ HTTP fetch failed: {e}")
+                raise ValueError(f"Failed to load website: {str(e)}")
 
-        soup = BeautifulSoup(html_content, "html.parser") if html_content else None
+            soup = BeautifulSoup(html_content, "html.parser") if html_content else None
 
-        # Extract everything we can from HTML
-        company_name = self._extract_company_name(soup)
-        meta_description = self._extract_description(soup)
-        favicon = self._extract_favicon(soup, final_url)
-        html_logo = self._extract_logo_from_html(soup, final_url)
-        html_colors = self._extract_colors_from_css(soup, html_content)
-        html_fonts = self._extract_fonts_from_html(soup, html_content)
-        page_text = self._extract_page_text(soup)
+            # Extract from HTML
+            company_name = self._extract_company_name(soup)
+            meta_description = self._extract_description(soup)
+            favicon = self._extract_favicon(soup, final_url)
+            logo_url = self._extract_logo_from_html(soup, final_url)
+            page_text = self._extract_page_text(soup)
+
+            # Extract colors/fonts from inline CSS
+            html_colors = self._extract_colors_from_css(soup, html_content)
+            html_fonts = self._extract_fonts_from_html(soup, html_content)
+
+            # Also fetch external CSS files for more colors/fonts
+            css_colors, css_fonts = await self._fetch_external_css(
+                soup, final_url, client
+            )
+            # Merge (external CSS results appended)
+            for c in css_colors:
+                if c not in html_colors:
+                    html_colors.append(c)
+            for f in css_fonts:
+                if f.lower() not in {x.lower() for x in html_fonts}:
+                    html_fonts.append(f)
 
         layer1_time = time.time() - layer1_start
-        print(f"  ✅ Layer 1 done in {layer1_time:.1f}s — Name: '{company_name}', Colors: {len(html_colors)}, Fonts: {len(html_fonts)}")
+        print(f"  ✅ Layer 1 done in {layer1_time:.1f}s — "
+              f"Name: '{company_name}', Colors: {len(html_colors)}, "
+              f"Fonts: {len(html_fonts)}")
 
-        # ═══════════════════════════════════════════════════════
-        # LAYERS 2 & 3: Run in PARALLEL
-        # ═══════════════════════════════════════════════════════
-        print("  🔄 Layers 2+3: Starting parallel (Browser + Gemini)...")
+        # ═══════════════════════════════════════════════════
+        # LAYER 2: Gemini Flash text-only
+        # ═══════════════════════════════════════════════════
+        print("  🧠 Layer 2: Gemini Flash analysis...")
+        layer2_start = time.time()
 
-        async def run_browser():
-            """Layer 2: Playwright for computed styles."""
-            try:
-                result = await self.browser_service.capture_and_extract(url)
-                return result.get('styles', {})
-            except Exception as e:
-                print(f"  ⚠️ Browser extraction failed: {e}")
-                return {}
+        gemini_data = {}
+        try:
+            gemini_data = await self.gemini_service.generate_brand_analysis(
+                company_name=company_name,
+                description=meta_description,
+                page_text=page_text,
+                url=final_url
+            )
+        except Exception as e:
+            print(f"  ⚠️ Gemini analysis failed: {e}")
 
-        async def run_gemini():
-            """Layer 3: Gemini Flash text-only analysis."""
-            try:
-                result = await self.gemini_service.generate_brand_analysis(
-                    company_name=company_name,
-                    description=meta_description,
-                    page_text=page_text,
-                    url=final_url
-                )
-                return result
-            except Exception as e:
-                print(f"  ⚠️ Gemini analysis failed: {e}")
-                return {}
+        layer2_time = time.time() - layer2_start
+        print(f"  ✅ Layer 2 done in {layer2_time:.1f}s")
 
-        parallel_start = time.time()
-        computed_styles, gemini_data = await asyncio.gather(run_browser(), run_gemini())
-        parallel_time = time.time() - parallel_start
-        print(f"  ✅ Layers 2+3 done in {parallel_time:.1f}s")
-
-        # ═══════════════════════════════════════════════════════
-        # MERGE DATA (Priority: Playwright > CSS parsed > Gemini > defaults)
-        # ═══════════════════════════════════════════════════════
+        # ═══════════════════════════════════════════════════
+        # MERGE DATA
+        # ═══════════════════════════════════════════════════
         print("  🔗 Merging data...")
 
-        # COMPANY NAME: HTML > Gemini
-        # (HTML is usually more accurate for name)
+        # ── COLORS ──
+        # Gemini may suggest brand colors too
+        gemini_colors = gemini_data.get("brand_colors", [])
+        if isinstance(gemini_colors, list):
+            for c in gemini_colors:
+                if isinstance(c, str) and re.match(r'^#[0-9a-fA-F]{6}$', c):
+                    c = c.upper()
+                    if c not in html_colors:
+                        html_colors.append(c)
 
-        # COLORS: Playwright computed > CSS parsed > defaults
-        primary_color = self._rgb_to_hex(computed_styles.get("primary_color")) or \
-                        (html_colors[0] if html_colors else None) or \
-                        "#000000"
-        background_color = self._rgb_to_hex(computed_styles.get("background_color")) or \
-                           "#ffffff"
+        # Build final palette
+        colors = self._build_color_palette(html_colors, gemini_colors)
+        all_colors = list(dict.fromkeys(html_colors))[:10]
+        colors.all_colors = all_colors
 
-        # If primary == background, try next CSS color
-        if primary_color == background_color and len(html_colors) > 1:
-            primary_color = html_colors[1]
+        # ── FONTS ──
+        gemini_fonts = gemini_data.get("brand_fonts", [])
+        if isinstance(gemini_fonts, list):
+            for f in gemini_fonts:
+                if isinstance(f, str) and f.lower() not in {x.lower() for x in html_fonts} and f.lower() not in GENERIC_FONTS:
+                    html_fonts.append(f)
 
-        # Build all_colors from CSS-parsed colors (deduplicated)
-        all_colors = list(dict.fromkeys(html_colors))  # preserve order, remove dupes
-
-        colors = ColorPalette(
-            primary=primary_color,
-            secondary=html_colors[1] if len(html_colors) > 1 else None,
-            accent=html_colors[2] if len(html_colors) > 2 else None,
-            background=background_color,
-            text=html_colors[3] if len(html_colors) > 3 else "#000000",
-            all_colors=all_colors[:10]  # Cap at 10
-        )
-
-        # FONTS: Playwright computed > HTML parsed > default
         fonts = []
-        if computed_styles.get("heading_font"):
+        for i, font_name in enumerate(html_fonts[:5]):
             fonts.append(FontInfo(
-                family=computed_styles["heading_font"],
-                style="Display", is_primary=True, source="Computed Style"
+                family=font_name,
+                style="Display" if i == 0 else "Body",
+                is_primary=(i == 0),
+                is_body=(i == 1),
+                source="CSS" if i < len(html_fonts) - len(gemini_fonts) else "AI Inferred"
             ))
-        if computed_styles.get("body_font"):
-            fonts.append(FontInfo(
-                family=computed_styles["body_font"],
-                style="Body", is_body=True, source="Computed Style"
-            ))
-        
-        # Add HTML-parsed fonts that aren't already in the list
-        existing_families = {f.family.lower() for f in fonts}
-        for font_name in html_fonts:
-            if font_name.lower() not in existing_families:
-                fonts.append(FontInfo(family=font_name, source="CSS Parsed"))
-                existing_families.add(font_name.lower())
-
         if not fonts:
-            fonts = [FontInfo(family="Inter", source="Default")]
+            # Use Gemini suggestions or default
+            default_font = gemini_fonts[0] if gemini_fonts else "Inter"
+            fonts = [FontInfo(family=default_font, source="AI Inferred")]
 
-        # LOGO: Playwright > HTML parsed
+        # ── LOGO ──
         logo = None
-        logo_url = computed_styles.get("logo_url") or html_logo
         if logo_url:
-            fmt = logo_url.split(".")[-1].lower().split("?")[0]
-            if len(fmt) > 4: fmt = "png"
-            logo = ExtractedLogo(url=logo_url, format=fmt, is_svg="svg" in fmt)
+            fmt = logo_url.split(".")[-1].lower().split("?")[0].split("#")[0]
+            if len(fmt) > 4 or not fmt.isalpha():
+                fmt = "png"
+            logo = ExtractedLogo(
+                url=logo_url, format=fmt, is_svg=("svg" in fmt)
+            )
 
-        # BRAND VIBE & STRATEGY from Gemini
+        # ── STRATEGY + VIBE ──
         vibe = gemini_data.get("brand_vibe", [])
         company_summary = gemini_data.get("company_summary", "")
         raw_strategy = gemini_data.get("strategy")
@@ -183,28 +221,32 @@ class AssetExtractor:
             raw_strategy = {
                 "brand_archetype": "The Creator",
                 "brand_voice": "Professional and trustworthy",
-                "content_pillars": ["Industry Trends", "Company Updates", "Thought Leadership", "Product Tips"],
-                "visual_style_guide": ["Clean and modern", "Consistent use of brand colors"],
+                "content_pillars": ["Industry Trends", "Company Updates",
+                                    "Thought Leadership", "Product Tips"],
+                "visual_style_guide": ["Clean and modern",
+                                       "Consistent use of brand colors"],
                 "recommended_post_types": ["Educational", "Promotional"],
-                "campaign_ideas": ["Showcase unique value proposition", "Highlight customer success stories"],
+                "campaign_ideas": ["Showcase unique value proposition",
+                                   "Highlight customer success stories"],
                 "target_audience": "General Professional Audience",
                 "key_strengths": ["Innovation", "Reliability"],
-                "design_style": "Modern Professional"
+                "design_style": "Modern Professional",
             }
 
-        # Normalize strategy (Gemini sometimes returns dicts instead of strings)
         raw_strategy = self._normalize_strategy(raw_strategy)
 
         total_time = time.time() - start_time
         print(f"\n{'─'*60}")
         print(f"  ⏱️  TOTAL TIME: {total_time:.1f}s")
-        print(f"  📊  Name: {company_name} | Colors: {len(all_colors)} | Fonts: {len(fonts)} | Logo: {'✅' if logo else '❌'}")
+        print(f"  📊  Name: {company_name} | Colors: {len(all_colors)} | "
+              f"Fonts: {len(fonts)} | Logo: {'✅' if logo else '❌'}")
         print(f"{'='*60}\n")
 
         return BrandAssets(
             website_url=final_url,
             company_name=company_name,
-            company_summary=company_summary or meta_description or f"Analysis for {company_name}",
+            company_summary=(company_summary or meta_description
+                             or f"Analysis for {company_name}"),
             logo=logo,
             colors=colors,
             fonts=fonts,
@@ -212,27 +254,237 @@ class AssetExtractor:
             meta_description=meta_description,
             extraction_timestamp=datetime.now().isoformat(),
             brand_vibe=vibe,
-            strategy=StrategicAnalysis(**raw_strategy)
+            strategy=StrategicAnalysis(**raw_strategy),
         )
 
     # ═══════════════════════════════════════════════════════
-    # LAYER 1 HELPERS: Pure HTML/CSS Extraction
+    # EXTERNAL CSS FETCHING
+    # ═══════════════════════════════════════════════════════
+
+    async def _fetch_external_css(
+        self, soup: BeautifulSoup, base_url: str, client: httpx.AsyncClient
+    ) -> Tuple[List[str], List[str]]:
+        """Fetch and parse external CSS files for colors and fonts."""
+        if not soup:
+            return [], []
+
+        css_links = []
+        for link in soup.find_all("link", rel=lambda x: x and "stylesheet" in str(x).lower()):
+            href = link.get("href")
+            if href:
+                # Skip CDN libraries (bootstrap, fontawesome, owl, etc.)
+                lower = href.lower()
+                if any(skip in lower for skip in [
+                    "cdn.jsdelivr", "cdnjs.cloudflare", "fonts.googleapis",
+                    "unpkg.com", "stackpath", "maxcdn"
+                ]):
+                    continue
+                css_links.append(urljoin(base_url, href))
+
+        if not css_links:
+            return [], []
+
+        all_colors = []
+        all_fonts = []
+        seen_colors = set()
+        seen_fonts = set()
+
+        # Fetch up to 3 app CSS files in parallel
+        async def fetch_one(css_url: str):
+            try:
+                r = await client.get(css_url, timeout=5.0)
+                return r.text if r.status_code == 200 else ""
+            except Exception:
+                return ""
+
+        tasks = [fetch_one(u) for u in css_links[:3]]
+        results = await asyncio.gather(*tasks)
+
+        hex_pattern = re.compile(r'#([0-9a-fA-F]{6})\b')
+        rgb_pattern = re.compile(r'rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)')
+        hsl_pattern = re.compile(r'hsl\(\s*(\d+)\s*,\s*(\d+)%?\s*,\s*(\d+)%?\s*\)')
+        font_pattern = re.compile(r'font-family\s*:\s*([^;}{]+)')
+
+        for css_text in results:
+            if not css_text:
+                continue
+
+            # Extract hex colors
+            for match in hex_pattern.finditer(css_text):
+                c = f"#{match.group(1).upper()}"
+                if c not in seen_colors:
+                    all_colors.append(c)
+                    seen_colors.add(c)
+
+            # Extract rgb colors
+            for match in rgb_pattern.finditer(css_text):
+                r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                c = f"#{r:02X}{g:02X}{b:02X}"
+                if c not in seen_colors:
+                    all_colors.append(c)
+                    seen_colors.add(c)
+
+            # Extract HSL colors
+            for match in hsl_pattern.finditer(css_text):
+                h, s, l = int(match.group(1)), int(match.group(2)), int(match.group(3))
+                hex_c = self._hsl_to_hex(h, s, l)
+                if hex_c not in seen_colors:
+                    all_colors.append(hex_c)
+                    seen_colors.add(hex_c)
+
+            # Extract CSS variable colors
+            var_pattern = re.compile(r'--[\w-]+\s*:\s*#([0-9a-fA-F]{6})\b')
+            for match in var_pattern.finditer(css_text):
+                c = f"#{match.group(1).upper()}"
+                if c not in seen_colors:
+                    # CSS variable colors are high priority — insert at front
+                    all_colors.insert(0, c)
+                    seen_colors.add(c)
+
+            # Extract fonts
+            for match in font_pattern.finditer(css_text):
+                raw = match.group(1).strip()
+                for part in raw.split(","):
+                    name = part.strip().strip("'\"").strip()
+                    if _is_valid_font(name) and name.lower() not in seen_fonts:
+                        all_fonts.append(name)
+                        seen_fonts.add(name.lower())
+
+        # Filter out very common/boring colors
+        boring = {"#FFFFFF", "#000000", "#333333", "#666666", "#999999",
+                  "#CCCCCC", "#EEEEEE", "#F5F5F5", "#FAFAFA", "#808080"}
+        interesting = [c for c in all_colors if c not in boring]
+        boring_found = [c for c in all_colors if c in boring]
+
+        # Return interesting colors first, then boring ones
+        return (interesting + boring_found)[:20], all_fonts[:5]
+
+    @staticmethod
+    def _hsl_to_hex(h: int, s: int, l: int) -> str:
+        """Convert HSL to hex color."""
+        s /= 100
+        l /= 100
+        c = (1 - abs(2 * l - 1)) * s
+        x = c * (1 - abs((h / 60) % 2 - 1))
+        m = l - c / 2
+        if h < 60:     r1, g1, b1 = c, x, 0
+        elif h < 120:  r1, g1, b1 = x, c, 0
+        elif h < 180:  r1, g1, b1 = 0, c, x
+        elif h < 240:  r1, g1, b1 = 0, x, c
+        elif h < 300:  r1, g1, b1 = x, 0, c
+        else:          r1, g1, b1 = c, 0, x
+        r = int((r1 + m) * 255)
+        g = int((g1 + m) * 255)
+        b = int((b1 + m) * 255)
+        return f"#{r:02X}{g:02X}{b:02X}"
+
+    # ═══════════════════════════════════════════════════════
+    # COLOR PALETTE BUILDER
+    # ═══════════════════════════════════════════════════════
+
+    @staticmethod
+    def _color_saturation(hex_color: str) -> float:
+        """Calculate color saturation (0-1). Higher = more vibrant."""
+        try:
+            h = hex_color.lstrip("#")
+            r, g, b = int(h[0:2], 16) / 255, int(h[2:4], 16) / 255, int(h[4:6], 16) / 255
+            max_c, min_c = max(r, g, b), min(r, g, b)
+            diff = max_c - min_c
+            if max_c == 0:
+                return 0
+            return diff / max_c
+        except Exception:
+            return 0
+
+    def _build_color_palette(self, css_colors: List[str], gemini_colors: List[str]) -> ColorPalette:
+        """Build a ColorPalette from extracted colors. Prioritize vibrant colors."""
+        # Near-neutral colors (very low saturation / common gray shades)
+        neutrals = {"#FFFFFF", "#000000", "#333333", "#666666", "#999999",
+                    "#CCCCCC", "#EEEEEE", "#F5F5F5", "#FAFAFA", "#808080",
+                    "#FFF", "#000", "#E5E5E5", "#D4D4D4", "#F4F4F4",
+                    "#EDEDED", "#EFEFEF", "#9CA3AF", "#6B7280", "#D1D5DB",
+                    "#F3F4F6", "#F9FAFB", "#E5E7EB", "#374151", "#4B5563",
+                    "#1F2937", "#111827", "#030712"}
+
+        # Sort CSS colors by vibrancy (saturation)
+        vibrant = sorted(
+            [c for c in css_colors if c.upper() not in neutrals
+             and self._color_saturation(c) > 0.15],
+            key=lambda c: self._color_saturation(c),
+            reverse=True
+        )
+
+        # Gemini colors (validated hex)
+        gemini_hex = [c.upper() for c in gemini_colors
+                      if isinstance(c, str) and re.match(r'^#[0-9a-fA-F]{6}$', c)]
+        gemini_vibrant = [c for c in gemini_hex if c not in neutrals
+                         and self._color_saturation(c) > 0.15]
+
+        # Combined pool: CSS vibrant first, then Gemini vibrant
+        pool = vibrant + [c for c in gemini_vibrant if c not in vibrant]
+
+        # Pick primary: most vibrant color
+        primary = pool[0] if pool else (gemini_hex[0] if gemini_hex else "#4A90D9")
+
+        # Pick secondary: next different color
+        secondary = None
+        for c in pool[1:] + gemini_hex:
+            if c != primary:
+                secondary = c
+                break
+
+        # Pick accent
+        accent = None
+        used = {primary, secondary}
+        for c in pool[2:] + gemini_hex:
+            if c not in used:
+                accent = c
+                break
+
+        # Background: light color from CSS or default
+        background = "#FFFFFF"
+        light_shades = {"#FAFAFA", "#F5F5F5", "#F8F8F8", "#F0F0F0",
+                        "#F9FAFB", "#F3F4F6", "#F4F4F4"}
+        for c in css_colors:
+            if c.upper() in light_shades:
+                background = c.upper()
+                break
+
+        # Text: dark color from CSS or default
+        text_color = "#1A1A1A"
+        dark_shades = {"#111111", "#1A1A1A", "#212121", "#222222",
+                       "#232323", "#2D2D2D", "#333333", "#0F172A", "#1E293B",
+                       "#111827", "#1F2937"}
+        for c in css_colors:
+            if c.upper() in dark_shades:
+                text_color = c.upper()
+                break
+
+        print(f"    🎨 Palette: primary={primary} secondary={secondary} accent={accent}")
+
+        return ColorPalette(
+            primary=primary,
+            secondary=secondary,
+            accent=accent,
+            background=background,
+            text=text_color,
+        )
+
+    # ═══════════════════════════════════════════════════════
+    # HTML EXTRACTION METHODS
     # ═══════════════════════════════════════════════════════
 
     def _extract_company_name(self, soup: BeautifulSoup) -> str:
-        if not soup: return "Unknown"
-        # og:site_name is usually the cleanest
+        if not soup:
+            return "Unknown"
         og_name = soup.find("meta", property="og:site_name")
         if og_name and og_name.get("content"):
             return og_name["content"].strip()
-        # Fallback to title tag
         if soup.title and soup.title.string:
             raw = soup.title.string.strip()
-            # Clean separators: "Page Title | Brand" → "Brand"
-            for sep in ['|', ' - ', ' – ', ' — ', ':']:
+            for sep in ["|", " - ", " – ", " — ", ":"]:
                 if sep in raw:
                     parts = [p.strip() for p in raw.split(sep)]
-                    # Return shortest meaningful part (usually the brand name)
                     valid = [p for p in parts if len(p) > 1]
                     if valid:
                         return min(valid, key=len)
@@ -240,7 +492,8 @@ class AssetExtractor:
         return "Unknown Company"
 
     def _extract_description(self, soup: BeautifulSoup) -> str:
-        if not soup: return ""
+        if not soup:
+            return ""
         desc = soup.find("meta", attrs={"name": "description"})
         if desc and desc.get("content"):
             return desc["content"]
@@ -250,176 +503,235 @@ class AssetExtractor:
         return ""
 
     def _extract_favicon(self, soup: BeautifulSoup, base_url: str) -> str:
-        if not soup: return urljoin(base_url, "/favicon.ico")
-        icon_link = soup.find("link", rel=lambda x: x and isinstance(x, list) and any("icon" in r.lower() for r in x))
+        if not soup:
+            return urljoin(base_url, "/favicon.ico")
+        icon_link = soup.find(
+            "link",
+            rel=lambda x: x and isinstance(x, list)
+            and any("icon" in r.lower() for r in x),
+        )
         if not icon_link:
-            icon_link = soup.find("link", rel=lambda x: x and isinstance(x, str) and "icon" in x.lower())
+            icon_link = soup.find(
+                "link",
+                rel=lambda x: x and isinstance(x, str) and "icon" in x.lower(),
+            )
         if icon_link and icon_link.get("href"):
             return urljoin(base_url, icon_link["href"])
         return urljoin(base_url, "/favicon.ico")
 
-    def _extract_logo_from_html(self, soup: BeautifulSoup, base_url: str) -> Optional[str]:
-        """Extract logo URL from HTML — checks header, nav, common patterns."""
-        if not soup: return None
+    def _extract_logo_from_html(
+        self, soup: BeautifulSoup, base_url: str
+    ) -> Optional[str]:
+        if not soup:
+            return None
 
-        # Priority order for logo detection
+        def resolve_url(src: str) -> Optional[str]:
+            if not src:
+                return None
+            if src.startswith("data:"):
+                return None
+            if src.startswith("//"):
+                src = "https:" + src
+            if src.startswith(("http://", "https://")):
+                return src
+            return urljoin(base_url, src)
+
+        def get_real_src(el) -> Optional[str]:
+            for attr in ("data-src", "data-lazy-src", "data-original"):
+                val = el.get(attr)
+                if val:
+                    resolved = resolve_url(val.split(",")[0].strip().split(" ")[0])
+                    if resolved:
+                        return resolved
+            resolved = resolve_url(el.get("src"))
+            if resolved:
+                return resolved
+            return resolve_url(el.get("content"))
+
+        # --- Priority 1: Find logo from HTML selectors ---
         selectors = [
-            # 1. Images inside header/nav
-            lambda: soup.select_one("header img, nav img"),
-            # 2. Images with 'logo' in class/id/alt/src
-            lambda: soup.find("img", attrs={"class": lambda x: x and "logo" in str(x).lower()}),
-            lambda: soup.find("img", attrs={"id": lambda x: x and "logo" in str(x).lower()}),
-            lambda: soup.find("img", attrs={"alt": lambda x: x and "logo" in str(x).lower()}),
-            lambda: soup.find("img", attrs={"src": lambda x: x and "logo" in str(x).lower()}),
-            # 3. SVG with logo class
-            lambda: soup.find("svg", attrs={"class": lambda x: x and "logo" in str(x).lower()}),
-            # 4. og:image fallback
-            lambda: soup.find("meta", property="og:image"),
+            lambda: soup.select_one("header img, nav img, .navbar img"),
+            lambda: soup.find("img", attrs={
+                "class": lambda x: x and "logo" in str(x).lower()
+            }),
+            lambda: soup.find("img", attrs={
+                "id": lambda x: x and "logo" in str(x).lower()
+            }),
+            lambda: soup.find("img", attrs={
+                "alt": lambda x: x and "logo" in str(x).lower()
+            }),
+            lambda: soup.find("img", attrs={
+                "src": lambda x: (x and isinstance(x, str)
+                                  and "logo" in x.lower()
+                                  and not x.startswith("data:"))
+            }),
+            lambda: soup.find("a", attrs={
+                "class": lambda x: x and ("brand" in str(x).lower()
+                                          or "logo" in str(x).lower())
+            }),
         ]
-
         for selector in selectors:
             try:
                 el = selector()
                 if el:
-                    src = el.get("src") or el.get("content") or el.get("href")
-                    if src:
-                        return urljoin(base_url, src)
+                    if el.name == "a":
+                        nested_img = el.find("img")
+                        if nested_img:
+                            el = nested_img
+                        else:
+                            continue
+                    url = get_real_src(el)
+                    if url:
+                        return url
             except Exception:
                 continue
 
+        # --- Priority 2: apple-touch-icon (high-res, most sites have it) ---
+        apple_icon = soup.find("link", rel=lambda x: x and isinstance(x, list)
+                               and any("apple-touch-icon" in r.lower() for r in x))
+        if not apple_icon:
+            apple_icon = soup.find("link", rel=lambda x: x and isinstance(x, str)
+                                   and "apple-touch-icon" in x.lower())
+        if apple_icon and apple_icon.get("href"):
+            resolved = resolve_url(apple_icon["href"])
+            if resolved:
+                return resolved
+
+        # --- Priority 3: og:image (social sharing image) ---
+        og_image = soup.find("meta", property="og:image")
+        if og_image and og_image.get("content"):
+            resolved = resolve_url(og_image["content"])
+            if resolved:
+                return resolved
+
+        # --- Priority 4: Google Favicon API (128px, always works) ---
+        try:
+            parsed = urlparse(base_url)
+            domain = parsed.netloc or parsed.hostname
+            if domain:
+                domain = domain.replace("www.", "")
+                return (f"https://t3.gstatic.com/faviconV2?client=SOCIAL"
+                        f"&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
+                        f"&url=https://{domain}&size=128")
+        except Exception:
+            pass
+
         return None
 
-    def _extract_colors_from_css(self, soup: BeautifulSoup, html: str) -> List[str]:
-        """Extract brand colors from inline CSS, <style> tags, and common patterns."""
+    def _extract_colors_from_css(
+        self, soup: BeautifulSoup, html: str
+    ) -> List[str]:
         colors = []
         seen = set()
-
         if not html:
             return colors
 
-        # 1. Find all hex colors in inline styles and <style> tags
-        hex_pattern = re.compile(r'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b')
-        
-        # From <style> tags
+        hex_pattern = re.compile(r"#([0-9a-fA-F]{6})\b")
+        hex3_pattern = re.compile(r"#([0-9a-fA-F]{3})\b")
+
         if soup:
             for style_tag in soup.find_all("style"):
                 if style_tag.string:
                     for match in hex_pattern.finditer(style_tag.string):
-                        hex_color = f"#{match.group(1).upper()}"
-                        if len(hex_color) == 4:  # Convert #ABC to #AABBCC
-                            hex_color = f"#{hex_color[1]*2}{hex_color[2]*2}{hex_color[3]*2}"
-                        if hex_color not in seen and hex_color not in ("#FFFFFF", "#000000", "#FFF", "#FFFFF"):
-                            colors.append(hex_color)
-                            seen.add(hex_color)
+                        c = f"#{match.group(1).upper()}"
+                        if c not in seen:
+                            colors.append(c)
+                            seen.add(c)
+                    for match in hex3_pattern.finditer(style_tag.string):
+                        short = match.group(1).upper()
+                        c = f"#{short[0]*2}{short[1]*2}{short[2]*2}"
+                        if c not in seen:
+                            colors.append(c)
+                            seen.add(c)
 
-        # 2. From inline style attributes
-        if soup:
             for el in soup.find_all(attrs={"style": True}):
                 style = el.get("style", "")
                 for match in hex_pattern.finditer(style):
-                    hex_color = f"#{match.group(1).upper()}"
-                    if len(hex_color) == 4:
-                        hex_color = f"#{hex_color[1]*2}{hex_color[2]*2}{hex_color[3]*2}"
-                    if hex_color not in seen and hex_color not in ("#FFFFFF", "#000000"):
-                        colors.append(hex_color)
-                        seen.add(hex_color)
+                    c = f"#{match.group(1).upper()}"
+                    if c not in seen:
+                        colors.append(c)
+                        seen.add(c)
 
-        # 3. Also extract rgb() colors from styles
-        rgb_pattern = re.compile(r'rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)')
-        full_text = str(soup) if soup else html
-        for match in rgb_pattern.finditer(full_text[:50000]):  # Limit scan
+        # RGB values from HTML
+        rgb_pattern = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
+        search_text = str(soup)[:50000] if soup else html[:50000]
+        for match in rgb_pattern.finditer(search_text):
             r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-            hex_color = f"#{r:02X}{g:02X}{b:02X}"
-            if hex_color not in seen and hex_color not in ("#FFFFFF", "#000000"):
-                colors.append(hex_color)
-                seen.add(hex_color)
-        
-        return colors[:15]  # Cap at 15 unique colors
+            c = f"#{r:02X}{g:02X}{b:02X}"
+            if c not in seen:
+                colors.append(c)
+                seen.add(c)
 
-    def _extract_fonts_from_html(self, soup: BeautifulSoup, html: str) -> List[str]:
-        """Extract font names from CSS @font-face, Google Fonts links, and inline styles."""
+        return colors[:20]
+
+    def _extract_fonts_from_html(
+        self, soup: BeautifulSoup, html: str
+    ) -> List[str]:
         fonts = []
         seen = set()
-
         if not soup:
             return fonts
 
-        # 1. Google Fonts <link> tags
+        # Google Fonts links
         for link in soup.find_all("link", href=True):
             href = link["href"]
             if "fonts.googleapis.com" in href:
-                # Parse family names from URL
-                family_match = re.findall(r'family=([^&:]+)', href)
+                family_match = re.findall(r"family=([^&:]+)", href)
                 for fam in family_match:
-                    # Handle URL-encoded names: "Open+Sans" → "Open Sans"
                     for name in fam.split("|"):
                         clean = name.replace("+", " ").split(":")[0].strip()
-                        if clean and clean.lower() not in seen:
+                        if (clean and clean.lower() not in seen
+                                and clean.lower() not in GENERIC_FONTS):
                             fonts.append(clean)
                             seen.add(clean.lower())
 
-        # 2. @font-face in <style> tags
+        # Inline style font-family
         for style_tag in soup.find_all("style"):
             if style_tag.string:
-                font_face_pattern = re.compile(r"font-family\s*:\s*['\"]?([^;'\"}\n]+)")
-                for match in font_face_pattern.finditer(style_tag.string):
+                for match in re.finditer(
+                    r"font-family\s*:\s*['\"]?([^;'\"}\n]+)", style_tag.string
+                ):
                     name = match.group(1).strip().strip("'\"").split(",")[0].strip()
-                    if name and name.lower() not in seen and name.lower() not in ("inherit", "initial", "sans-serif", "serif", "monospace"):
+                    if _is_valid_font(name) and name.lower() not in seen:
                         fonts.append(name)
                         seen.add(name.lower())
 
-        return fonts[:5]  # Cap at 5 fonts
+        return fonts[:5]
 
     def _extract_page_text(self, soup: BeautifulSoup) -> str:
-        """Extract clean visible text from the page for Gemini analysis."""
         if not soup:
             return ""
-
-        # Remove script/style/nav/footer elements
-        for tag in soup.find_all(["script", "style", "nav", "footer", "noscript", "iframe"]):
+        # Remove non-content elements
+        for tag in soup.find_all(
+            ["script", "style", "noscript", "iframe", "svg"]
+        ):
             tag.decompose()
-
-        # Get text from meaningful elements
         text_parts = []
-        for el in soup.find_all(["h1", "h2", "h3", "h4", "p", "li", "td", "span", "a"]):
+        for el in soup.find_all(
+            ["h1", "h2", "h3", "h4", "p", "li", "td", "span", "a",
+             "div", "section", "article"]
+        ):
             text = el.get_text(strip=True)
-            if text and len(text) > 3:  # Skip tiny fragments
+            if text and len(text) > 5:
                 text_parts.append(text)
-
-        # Deduplicate and join
-        seen_text = set()
-        unique_parts = []
+        # Deduplicate
+        seen = set()
+        unique = []
         for t in text_parts:
-            if t not in seen_text:
-                unique_parts.append(t)
-                seen_text.add(t)
-
-        return "\n".join(unique_parts[:200])  # Cap at 200 text blocks
+            if t not in seen:
+                unique.append(t)
+                seen.add(t)
+        return "\n".join(unique[:200])
 
     # ═══════════════════════════════════════════════════════
-    # UTILITY METHODS
+    # UTILITY
     # ═══════════════════════════════════════════════════════
-
-    @staticmethod
-    def _rgb_to_hex(rgb_str) -> Optional[str]:
-        """Convert 'rgb(r, g, b)' to '#RRGGBB'."""
-        if not rgb_str or 'rgb' not in str(rgb_str):
-            return None
-        nums = re.findall(r'\d+', str(rgb_str))
-        if len(nums) >= 3:
-            return '#{:02X}{:02X}{:02X}'.format(int(nums[0]), int(nums[1]), int(nums[2]))
-        return None
 
     @staticmethod
     def _normalize_strategy(strategy: dict) -> dict:
-        """
-        Gemini sometimes returns list fields as dicts instead of strings.
-        e.g. campaign_ideas: [{title: ..., description: ...}] instead of ["..."]
-        This normalizes all list fields to contain only strings.
-        """
         list_fields = [
-            'content_pillars', 'visual_style_guide', 'recommended_post_types',
-            'campaign_ideas', 'key_strengths'
+            "content_pillars", "visual_style_guide",
+            "recommended_post_types", "campaign_ideas", "key_strengths",
         ]
         for field in list_fields:
             items = strategy.get(field)
@@ -431,13 +743,15 @@ class AssetExtractor:
                     normalized.append(item)
                 elif isinstance(item, dict):
                     parts = []
-                    if item.get('title'):
-                        parts.append(item['title'])
-                    if item.get('description'):
-                        parts.append(item['description'])
+                    if item.get("title"):
+                        parts.append(item["title"])
+                    if item.get("description"):
+                        parts.append(item["description"])
                     if not parts:
                         parts = [str(v) for v in item.values() if v]
-                    normalized.append(': '.join(parts) if parts else str(item))
+                    normalized.append(
+                        ": ".join(parts) if parts else str(item)
+                    )
                 else:
                     normalized.append(str(item))
             strategy[field] = normalized

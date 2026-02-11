@@ -4,14 +4,15 @@ from typing import Dict, List, Any
 import json
 import os
 import random
+from app.services.gemini_service import GeminiService
 
 # TODO: Add your Gemini API key here
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
-# Pollination.ai API key (optional but recommended for no rate limits)
-# Get your key from: enter.pollinations.ai
-POLLINATION_API_KEY = os.getenv('POLLINATION_API_KEY', '')
-USE_POLLINATION = True  # Set to False to disable AI image generation
+# POLLINATION REMOVED - Using Gemini/Imagen only
+
+
+
 
 
 def clean_brand_name(raw_name: str) -> str:
@@ -123,8 +124,8 @@ def generate_posts_for_calendar(
                     post_number=i + 1
                 )
             
-            # Always generate a unique image per post using Pollinations.ai
-            image_url = generate_image_with_pollination(
+            # Generate a unique image per post using Gemini/Imagen
+            image_url = generate_post_image(
                 description=post_content['title'],
                 brand_name=brand_name,
                 platform=platform,
@@ -281,75 +282,44 @@ def generate_with_gemini(
 
 
 # ===============================================
-# Pollination.ai Image Generation
+# Image Generation (Imagen Only)
 # ===============================================
-def generate_image_with_pollination(description: str, brand_name: str, platform: str = 'instagram', post_index: int = 0) -> str:
+def generate_post_image(description: str, brand_name: str, platform: str = 'instagram', post_index: int = 0) -> str:
     """
-    Generate a UNIQUE image for each post using Pollination.ai API.
-    
-    Each post gets a different image by varying the prompt, seed, and style.
-    
-    Args:
-        description: Content description/title
-        brand_name: Name of the brand
-        platform: Target platform for sizing hints
-        post_index: Index of the post (0-based) — ensures uniqueness
-        
-    Returns:
-        URL to the generated image
+    Generate a UNIQUE image for each post using Google's Imagen (via GeminiService).
     """
     try:
-        from urllib.parse import quote
-        import time
+        svc = GeminiService()
+        # Fallback to default if no specific image model found (GeminiService handles this)
         
-        # Platform-specific aspect hints
-        aspect_hints = {
-            'instagram': 'square format, 1:1 aspect ratio',
-            'linkedin': 'professional, landscape format',
-            'x': 'wide format, 16:9 aspect ratio',
-            'facebook': 'social media friendly'
-        }
-        
-        # Vary visual style per post to ensure unique images
+        # Construct a good prompt for Imagen
+        # Add visual interest based on post type/platform
         visual_styles = [
-            'minimalist clean aesthetic',
-            'bold geometric composition',
-            'warm organic texture',
-            'futuristic tech gradient',
-            'elegant luxury soft lighting',
-            'dynamic motion blur effect',
-            'nature-inspired earthy tones',
-            'abstract data visualization',
-            'professional corporate branding',
-            'creative artistic watercolor'
+            "photorealistic, cinematic lighting",
+            "minimalist, clean composition",
+            "vibrant, high contrast",
+            "soft focus, lifestyle photography"
         ]
-        
-        aspect = aspect_hints.get(platform, 'square format')
         style = visual_styles[post_index % len(visual_styles)]
         
-        # Create a unique, descriptive prompt per post
-        prompt = f"Professional social media image for {brand_name}, {description}, {style}, {aspect}, high quality, vibrant colors, no text overlay, unique composition number {post_index + 1}"
+        prompt = (
+            f"Professional social media photo for {brand_name}. "
+            f"Subject: {description}. "
+            f"Style: {style}, high quality, 4k. "
+            f"No text overlay, no logos."
+        )
         
-        # URL-encode the prompt
-        encoded_prompt = quote(prompt.replace(' ', '_'))
+        image_url = svc.generate_image(prompt)
         
-        # Unique seed per post: combine time, post_index, and randomness
-        seed = (int(time.time()) + post_index * 7919 + random.randint(0, 99999)) % 999999
-        
-        # Build the URL
-        base_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-        params = f"seed={seed}&width=1024&height=1024&nologo=true"
-        
-        # Add API key if available
-        if POLLINATION_API_KEY:
-            params += f"&key={POLLINATION_API_KEY}"
-        
-        image_url = f"{base_url}?{params}"
-        
-        return image_url
-        
+        if image_url:
+            print(f"    🖼️ Generated image {post_index + 1} (Imagen)")
+            return image_url
+        else:
+            print(f"    ⚠️ Imagen generation returned None for post {post_index + 1}")
+            return ""
+            
     except Exception as e:
-        print(f"Error generating Pollination image: {e}")
+        print(f"Imagen generation failed: {e}")
         return ""
 
 
@@ -677,10 +647,12 @@ def generate_weekly_content(brand_data: Dict[str, Any], tone: str = 'professiona
                 # If no good image found or relevance is low, generate one
                 if should_generate or (image_relevance in ['low', 'none'] and not selected_image):
                     print(f"Generating new image for {day_name} - no relevant image found")
-                    generated_image_url = generate_image_with_dalle(
-                        content_description=f"{content_type}: {content_text[:200]}",
+                    print(f"Generating new image for {day_name} - no relevant image found")
+                    generated_image_url = generate_post_image(
+                        description=f"{content_type}: {content_text[:200]}",
                         brand_name=brand_name,
-                        style=tone
+                        platform='instagram',
+                        post_index=day_index
                     )
                     if generated_image_url:
                         selected_image = generated_image_url

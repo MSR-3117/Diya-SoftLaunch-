@@ -101,17 +101,18 @@ class GeminiService:
             self.available_models["vision"] = self.available_models["reasoning"]
 
             # 6. Select IMAGE GENERATION model
-            image_models.sort(key=lambda m: self._get_image_model_priority(m.name))
-            if image_models:
-                self.available_models["image"] = image_models[0].name
+            # Combine distinct image models and any text models that seem to have image capabilities
+            potential_image_models = list(image_models)
+            for m in text_models:
+                if 'image' in m.name.lower() and m not in potential_image_models:
+                    potential_image_models.append(m)
+            
+            potential_image_models.sort(key=lambda m: self._get_image_model_priority(m.name))
+            
+            if potential_image_models:
+                self.available_models["image"] = potential_image_models[0].name
             else:
-                # Try to find a Gemini model with image generation
-                for m in text_models:
-                    if 'image' in m.name.lower():
-                        self.available_models["image"] = m.name
-                        break
-                if not self.available_models.get("image"):
-                    self.available_models["image"] = "gemini-2.0-flash-exp-image-generation"
+                self.available_models["image"] = "gemini-2.0-flash-exp-image-generation"
 
             # Print final selection
             print("\n" + "=" * 70)
@@ -161,21 +162,18 @@ class GeminiService:
         """Returns priority for image models (lower = better)."""
         name = model_name.lower()
         
-        # Best: Imagen 4.0 (Newest)
-        if 'imagen-4' in name:
+        # Best: Gemini 2.0 Flash Image (Supports generateContent natively)
+        if 'gemini' in name and 'image' in name:
             return 1
-        # Second: Imagen 3.0
-        if 'imagen-3' in name:
-            return 2
-        # Third: Imagen 2.0
-        if 'imagen-2' in name:
-            return 3
-        # Fourth: Gemini Dedicated Image Gen (if Imagen not available)
-        if 'gemini' in name and 'image-generation' in name:
-            return 4
-        # Fifth: Gemini Flash Image (Experimental)
-        if 'gemini' in name and 'flash-image' in name:
+            
+        # Imagen models (Available but might need different API/method, so lower priority for now)
+        if 'imagen-4' in name:
             return 5
+        if 'imagen-3' in name:
+            return 6
+        if 'imagen-2' in name:
+            return 7
+            
         # Default
         return 10
 
@@ -295,6 +293,8 @@ Return a valid JSON object (no markdown code blocks, just raw JSON):
 {{
     "company_summary": "A concise 2-3 sentence summary of what this company does and their unique value proposition.",
     "brand_vibe": ["keyword1", "keyword2", "keyword3", "keyword4"],
+    "brand_colors": ["#HEX1", "#HEX2", "#HEX3", "#HEX4", "#HEX5"],
+    "brand_fonts": ["Primary Font Name", "Secondary Font Name"],
     "strategy": {{
         "brand_archetype": "The [Archetype] — one sentence why",
         "brand_voice": "Brief description of tone and personality",
@@ -307,6 +307,9 @@ Return a valid JSON object (no markdown code blocks, just raw JSON):
         "design_style": "Brief visual design style description"
     }}
 }}
+
+IMPORTANT for brand_colors: Infer the brand's likely color palette from the company name, industry, and page text. Return 5 hex codes: primary, secondary, accent, background, text. Use realistic, professional colors.
+IMPORTANT for brand_fonts: Suggest 2 real Google Fonts that suit this brand. First = display/heading font, second = body text font.
 
 Be specific to this company. Avoid generic content. Keep answers concise and punchy."""
 
@@ -412,4 +415,76 @@ Be specific to this company. Avoid generic content. Keep answers concise and pun
             print(f"Gemini Analysis Failed: {e}")
             print(f"DEBUG: Failed text was: {response.text if 'response' in locals() else 'No response'}")
             # Return empty/default structure on failure
+            # Return empty/default structure on failure
+            return None
+
+    def generate_image(self, prompt: str) -> Optional[str]:
+        """
+        Generate an image using the selected Gemini/Imagen model.
+        Returns the local URL path to the saved image (e.g. /static/generated/...), or None if generation fails.
+        """
+        if not os.getenv("GOOGLE_API_KEY"):
+            print("WARNING: API Key missing for image generation.")
+            return None
+
+        try:
+            # Clean up prompt for log safety
+            safe_prompt = prompt[:50] + "..." if len(prompt) > 50 else prompt
+            print(f"DEBUG: Generating image for prompt: '{safe_prompt}'")
+            
+            # Select model
+            model_name = self.available_models.get("image")
+            if not model_name:
+                model_name = "gemini-2.0-flash-exp-image-generation"
+                
+            print(f"DEBUG: Using model '{model_name}'")
+            
+            model = genai.GenerativeModel(model_name)
+            
+            # Use generate_content for image generation
+            response = model.generate_content(prompt)
+            
+            # Check for image data in response parts
+            image_data = None
+            if response.parts:
+                for part in response.parts:
+                    if hasattr(part, "inline_data") and part.inline_data:
+                        image_data = part.inline_data.data
+                        break
+            
+            if not image_data and response.candidates:
+                 # Try first candidate
+                 for part in response.candidates[0].content.parts:
+                    if hasattr(part, "inline_data") and part.inline_data:
+                        image_data = part.inline_data.data
+                        break
+            
+            if image_data:
+                import uuid
+                
+                # Use absolute path based on this file location
+                # structure: diya-AIscrap/app/services/gemini_service.py
+                # static: diya-AIscrap/static
+                base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+                static_dir = os.path.join(base_dir, "static", "generated")
+                os.makedirs(static_dir, exist_ok=True)
+                
+                filename = f"gen_{uuid.uuid4()}.png"
+                filepath = os.path.join(static_dir, filename)
+                
+                with open(filepath, "wb") as f:
+                    f.write(image_data)
+                    
+                print(f"DEBUG: Image saved to {filepath}")
+                
+                # Return URL path served by Flask (root-relative)
+                # The React frontend uses this URL directly if it's absolute or proxy-relative
+                # Since we serve SPA at root, /generated/filename works if serve_spa logic holds
+                return f"/generated/{filename}"
+                
+            print("DEBUG: Image generation response did not contain image data.")
+            return None
+            
+        except Exception as e:
+            print(f"Gemini Image Generation Failed: {e}")
             return None
