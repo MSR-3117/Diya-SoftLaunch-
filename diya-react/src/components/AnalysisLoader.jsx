@@ -92,13 +92,24 @@ export default function AnalysisLoader() {
         if (!isAnalyzing && !apiError && analysisStarted.current) {
             // Small delay to ensure animations look smooth
             const timer = setTimeout(() => {
-                gsap.to(containerRef.current, {
-                    opacity: 0,
-                    scale: 0.95,
-                    duration: 0.8,
-                    ease: "power2.inOut",
-                    onComplete: () => navigate('/brand-persona')
-                });
+                try {
+                    gsap.to(containerRef.current, {
+                        opacity: 0,
+                        scale: 0.95,
+                        duration: 0.8,
+                        ease: "power2.inOut",
+                        onComplete: () => navigate('/brand-persona')
+                    });
+                } catch (e) {
+                    // If GSAP fails for any reason, navigate directly
+                    console.warn('GSAP transition failed, navigating directly:', e);
+                    navigate('/brand-persona');
+                }
+
+                // Safety fallback: if GSAP onComplete never fires, force navigate
+                setTimeout(() => {
+                    navigate('/brand-persona');
+                }, 3000);
             }, 1000);
             return () => clearTimeout(timer);
         }

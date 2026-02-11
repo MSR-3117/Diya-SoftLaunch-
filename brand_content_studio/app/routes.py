@@ -2,12 +2,9 @@ import uuid
 from flask import Blueprint, render_template, request, jsonify, session
 from app.brand_scraper import scrape_brand_from_url
 from app.brand_fetcher import fetch_brand_assets
-from app.content_generator import generate_weekly_content
+# from app.content_generator import generate_weekly_content # Not used in this file
 import json
 from datetime import datetime
-
-# Server-side store for brand data to avoid cookie size limits
-BRAND_DATA_STORE = {}
 
 main_bp = Blueprint('main', __name__)
 brand_bp = Blueprint('brand', __name__, url_prefix='/brand')
@@ -76,14 +73,7 @@ def analyze_brand():
         if not brand_data.get('content_summary'):
              brand_data['content_summary'] = brand_data.get('description', '')
 
-        # Store in server-side memory instead of cookie
-        brand_id = str(uuid.uuid4())
-        BRAND_DATA_STORE[brand_id] = brand_data
-        session['brand_id'] = brand_id
-        
-        # Clear old data if any (optional cleanup)
-        if 'brand_data' in session:
-            session.pop('brand_data')
+        # STATELESS: Return all data to client. No server-side storage.
         
         return jsonify({
             'success': True,
@@ -115,19 +105,13 @@ def generate_calendar():
         if period == 'month':
             num_posts = max(1, num_posts // 4)
         
-        # Get brand data from server store or client
-        brand_data = None
-        brand_id = session.get('brand_id')
-        if brand_id and brand_id in BRAND_DATA_STORE:
-            brand_data = BRAND_DATA_STORE[brand_id]
-        
-        if not brand_data:
-            brand_data = data.get('brand_data')
+        # Get brand data DIRECTLY from request (Stateless)
+        brand_data = data.get('brand_data')
              
         tone = data.get('tone', 'professional')
         
         if not brand_data:
-            return jsonify({'error': 'Brand data is required (session expired or invalid)'}), 400
+            return jsonify({'error': 'Brand data is required in the request body'}), 400
         
         # Import the content generator
         from app.content_generator import generate_posts_for_calendar

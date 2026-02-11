@@ -3,3 +3,10 @@
 brand_content_studio/.env
 brand_content_studio/venv/
 *.env
+
+# diya-AIscrap
+diya-AIscrap/venv/
+diya-AIscrap/.env
+diya-AIscrap/__pycache__/
+diya-AIscrap/app/__pycache__/
+diya-AIscrap/app/services/__pycache__/
