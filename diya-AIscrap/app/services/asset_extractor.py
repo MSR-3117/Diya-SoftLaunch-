@@ -9,6 +9,7 @@ Total: ~4-8s (no browser launch needed)
 """
 import re
 import asyncio
+import json
 from typing import Optional, List, Tuple
 from datetime import datetime
 from urllib.parse import urljoin, urlparse
@@ -81,172 +82,274 @@ class AssetExtractor:
         }
 
     async def extract_assets(self, url: str) -> BrandAssets:
-        """Main extraction — 2 layers, no Chromium needed."""
+        """Main extraction — 8-stage optimized pipeline."""
         if not url.startswith(("http://", "https://")):
             url = f"https://{url}"
 
         import time
         start_time = time.time()
         print(f"\n{'='*60}")
-        print(f"⚡ FAST BRAND ANALYSIS (no browser): {url}")
+        print(f"⚡ OPTIMIZED BRAND ANALYSIS: {url}")
         print(f"{'='*60}")
 
         # ═══════════════════════════════════════════════════
-        # LAYER 1: HTTP + BeautifulSoup + External CSS
+        # STAGE 1: BrandFetch First Enrichment
         # ═══════════════════════════════════════════════════
-        print("  📡 Layer 1: Fetching HTML + CSS...")
+        print("  📡 Stage 1: BrandFetch Enrichment...")
+        brand_name_hint = urlparse(url).netloc.replace("www.", "").split(".")[0]
+        brandfetch_assets = {}
+        try:
+            from app.brand_fetcher import fetch_brand_assets
+            brandfetch_assets = fetch_brand_assets(brand_name_hint)
+        except Exception as e:
+            print(f"  ⚠️ BrandFetch failed: {e}")
+
+        # ═══════════════════════════════════════════════════
+        # STAGE 2: Parallel Multi-Page Crawling
+        # ═══════════════════════════════════════════════════
+        print("  📡 Stage 2: Parallel Multi-Page Crawling...")
         layer1_start = time.time()
 
-        html_content = ""
+        all_html_contents = []
+        pages_data = [] # List of {url, html, soup}
         final_url = url
+        
         async with httpx.AsyncClient(
-            headers=self.headers, follow_redirects=True, timeout=15.0
+            headers=self.headers, follow_redirects=True, timeout=10.0
         ) as client:
+            # First fetch homepage to find internal links
             try:
                 response = await client.get(url)
                 html_content = response.text
                 final_url = str(response.url)
+                soup = BeautifulSoup(html_content, "html.parser")
+                pages_data.append({"url": final_url, "html": html_content, "soup": soup})
             except Exception as e:
-                print(f"  ⚠️ HTTP fetch failed: {e}")
+                print(f"  ⚠️ Initial HTTP fetch failed: {e}")
                 raise ValueError(f"Failed to load website: {str(e)}")
 
-            soup = BeautifulSoup(html_content, "html.parser") if html_content else None
+            # Identify internal links (About, Services, Contact)
+            internal_links = self._identify_internal_links(soup, final_url)
+            print(f"  🔍 Found internal links: {internal_links}")
 
-            # Extract from HTML
-            company_name = self._extract_company_name(soup)
-            meta_description = self._extract_description(soup)
-            favicon = self._extract_favicon(soup, final_url)
-            logo_url = self._extract_logo_from_html(soup, final_url)
-            page_text = self._extract_page_text(soup)
+            # Fetch internal pages in parallel
+            if internal_links:
+                tasks = [client.get(link) for link in internal_links]
+                link_responses = await asyncio.gather(*tasks, return_exceptions=True)
+                
+                for i, resp in enumerate(link_responses):
+                    if isinstance(resp, httpx.Response) and resp.status_code == 200:
+                        l_url = str(resp.url)
+                        l_html = resp.text
+                        l_soup = BeautifulSoup(l_html, "html.parser")
+                        pages_data.append({"url": l_url, "html": l_html, "soup": l_soup})
+                        # Progressive extraction check would happen here
+                    else:
+                        print(f"  ⚠️ Failed to fetch internal link {internal_links[i]}")
 
-            # Extract colors/fonts from inline CSS
-            html_colors = self._extract_colors_from_css(soup, html_content)
-            html_fonts = self._extract_fonts_from_html(soup, html_content)
+            # Extract data from all collected pages
+            # (Aggregation for Layer 2 AI)
+            all_text_parts = []
+            html_colors = []
+            html_fonts = []
+            possible_logos = []
+            
+            # If BrandFetch provided assets, seed them
+            if brandfetch_assets:
+                if brandfetch_assets.get('logo', {}).get('url'):
+                    possible_logos.append(brandfetch_assets['logo']['url'])
+                if brandfetch_assets.get('colors'):
+                    # Convert dict values to list if needed
+                    bf_colors = brandfetch_assets['colors']
+                    if isinstance(bf_colors, dict):
+                        html_colors.extend([c for c in bf_colors.values() if c])
+                if brandfetch_assets.get('fonts'):
+                    bf_fonts = brandfetch_assets['fonts']
+                    if isinstance(bf_fonts, dict):
+                        html_fonts.extend([f for f in bf_fonts.values() if f])
 
-            # Also fetch external CSS files for more colors/fonts
-            css_colors, css_fonts = await self._fetch_external_css(
-                soup, final_url, client
-            )
-            # Merge (external CSS results appended)
-            for c in css_colors:
-                if c not in html_colors:
-                    html_colors.append(c)
-            for f in css_fonts:
-                if f.lower() not in {x.lower() for x in html_fonts}:
-                    html_fonts.append(f)
+            # Process all pages
+            css_tasks = []
+            for p in pages_data:
+                p_soup = p["soup"]
+                p_url = p["url"]
+                p_html = p["html"]
+                
+                # Extract text
+                all_text_parts.append(f"--- SOURCE: {p_url} ---\n{self._extract_page_text(p_soup)}")
+                
+                # Extract logos
+                logo = self._extract_logo_from_html(p_soup, p_url)
+                if logo: possible_logos.append(logo)
+                
+                # Extract colors/fonts from inline
+                html_colors.extend(self._extract_colors_from_css(p_soup, p_html))
+                html_fonts.extend(self._extract_fonts_from_html(p_soup, p_html))
+                
+                # Prepare external CSS fetch
+                css_tasks.append(self._fetch_external_css(p_soup, p_url, client))
+
+            # Fetch all external CSS in parallel across all pages
+            css_results = await asyncio.gather(*css_tasks)
+            for colors, fonts in css_results:
+                html_colors.extend(colors)
+                html_fonts.extend(fonts)
+
+            # De-duplicate
+            html_colors = list(dict.fromkeys(html_colors))
+            html_fonts = list(dict.fromkeys(html_fonts))
+            
+            company_name = self._extract_company_name(pages_data[0]["soup"])
+            meta_description = self._extract_description(pages_data[0]["soup"])
+            favicon = self._extract_favicon(pages_data[0]["soup"], final_url)
+            page_text = "\n\n".join(all_text_parts)
 
         layer1_time = time.time() - layer1_start
         print(f"  ✅ Layer 1 done in {layer1_time:.1f}s — "
-              f"Name: '{company_name}', Colors: {len(html_colors)}, "
-              f"Fonts: {len(html_fonts)}")
+              f"Colors: {len(html_colors)}, Fonts: {len(html_fonts)}")
 
         # ═══════════════════════════════════════════════════
-        # LAYER 2: Gemini Flash text-only
+        # STAGE 7 & 8: Single-Pass AI Synthesis (Premium)
         # ═══════════════════════════════════════════════════
-        print("  🧠 Layer 2: Gemini Flash analysis...")
-        layer2_start = time.time()
+        print("  🧠 Stage 7-8: Single-Pass Premium Synthesis (Gemini Pro)...")
+        ai_start = time.time()
+        
+        # 1. Condense the text for the AI (Goal: max 3-4k chars for ultra speed)
+        condensed_text = self._condense_text(page_text, max_chars=3500)
+        
+        # 2. Build deterministic hints
+        hints = {
+            "colors": html_colors[:10],
+            "fonts": html_fonts[:3],
+            "logo": possible_logos[0] if possible_logos else None,
+            "name": company_name,
+            "desc": meta_description[:200]
+        }
 
-        gemini_data = {}
+        # 3. Streamlined Synthesis Prompt (Reduced fluff for speed)
+        synthesis_prompt = f"""
+        JSON ONLY. Brand Profile Synthesis for '{company_name}'.
+        Website: {final_url}
+        Data: {json.dumps(hints)}
+        Content: {condensed_text}
+        
+        Return JSON:
+        {{
+            "company_name": "Name",
+            "company_summary": "2-sentence summary (executive tone).",
+            "brand_vibe": ["word1", "word2", "word3", "word4"],
+            "brand_colors": ["#PRIMARY", "#SECONDARY", "#ACCENT", "#BACKGROUND", "#TEXT"],
+            "brand_fonts": ["Heading Font", "Body Font"],
+            "strategy": {{
+                "brand_archetype": "Archetype - 1 sentence",
+                "brand_voice": "Tone",
+                "content_pillars": ["Pillar 1", "Pillar 2", "Pillar 3", "Pillar 4"],
+                "visual_style_guide": ["R1", "R2", "R3"],
+                "recommended_post_types": ["T1", "T2", "T3"],
+                "campaign_ideas": ["I1", "I2", "I3"],
+                "target_audience": "Audience details",
+                "key_strengths": ["S1", "S2", "S3"],
+                "design_style": "Style"
+            }}
+        }}
+        """
+
+
+        executive_summary = ""
+        vibe = []
+        gemini_colors = []
+        gemini_fonts = []
+        raw_strategy = {}
+
         try:
-            gemini_data = await self.gemini_service.generate_brand_analysis(
-                company_name=company_name,
-                description=meta_description,
-                page_text=page_text,
-                url=final_url
+            # OPTIMIZATION: Use Gemini 2.0/2.5 Flash for the single pass. 
+            # It's significantly faster than Pro while 2.0+ Flash quality is excellent for this task.
+            model = self.gemini_service.get_model_for_task("fast") 
+            
+            # Final tuning: temperature=0 and response_mime_type="application/json" for speed/consistency
+            response = model.generate_content(
+                synthesis_prompt,
+                generation_config={"response_mime_type": "application/json", "temperature": 0.0}
             )
+            
+            text = response.text.strip()
+            # If the model follows JSON mode strictly, we don't need regex, but keeping it for safety
+            json_match = re.search(r'\{.*\}', text, re.DOTALL)
+            if json_match:
+                synthesis = json.loads(json_match.group(0))
+                
+                # Extract results
+                company_name = synthesis.get("company_name", company_name)
+                executive_summary = synthesis.get("company_summary", "")
+                vibe = synthesis.get("brand_vibe", [])
+                gemini_colors = synthesis.get("brand_colors", [])
+                gemini_fonts = synthesis.get("brand_fonts", [])
+                raw_strategy = synthesis.get("strategy", {})
         except Exception as e:
-            print(f"  ⚠️ Gemini analysis failed: {e}")
+            print(f"  ⚠️ Single-pass synthesis failed: {e}")
 
-        layer2_time = time.time() - layer2_start
-        print(f"  ✅ Layer 2 done in {layer2_time:.1f}s")
+
+        ai_time = time.time() - ai_start
+        print(f"  ✅ AI Synthesis done in {ai_time:.1f}s")
+
 
         # ═══════════════════════════════════════════════════
-        # MERGE DATA
+        # MERGE & FINALIZE
         # ═══════════════════════════════════════════════════
-        print("  🔗 Merging data...")
-
-        # ── COLORS ──
-        # Gemini may suggest brand colors too
-        gemini_colors = gemini_data.get("brand_colors", [])
-        if isinstance(gemini_colors, list):
-            for c in gemini_colors:
-                if isinstance(c, str) and re.match(r'^#[0-9a-fA-F]{6}$', c):
-                    c = c.upper()
-                    if c not in html_colors:
-                        html_colors.append(c)
-
-        # Build final palette
+        
+        # Use AI suggested colors but anchor with cluster-validated colors
         colors = self._build_color_palette(html_colors, gemini_colors)
-        all_colors = list(dict.fromkeys(html_colors))[:10]
-        colors.all_colors = all_colors
+        colors.all_colors = list(dict.fromkeys(html_colors))[:10]
 
-        # ── FONTS ──
-        gemini_fonts = gemini_data.get("brand_fonts", [])
-        if isinstance(gemini_fonts, list):
-            for f in gemini_fonts:
-                if isinstance(f, str) and f.lower() not in {x.lower() for x in html_fonts} and f.lower() not in GENERIC_FONTS:
-                    html_fonts.append(f)
-
+        # Fonts
+        if not gemini_fonts:
+            gemini_fonts = ["Inter", "Roboto"]
+        
         fonts = []
-        for i, font_name in enumerate(html_fonts[:5]):
+        for i, font_name in enumerate(gemini_fonts):
             fonts.append(FontInfo(
                 family=font_name,
                 style="Display" if i == 0 else "Body",
                 is_primary=(i == 0),
                 is_body=(i == 1),
-                source="CSS" if i < len(html_fonts) - len(gemini_fonts) else "AI Inferred"
+                source="AI Inferred"
             ))
-        if not fonts:
-            # Use Gemini suggestions or default
-            default_font = gemini_fonts[0] if gemini_fonts else "Inter"
-            fonts = [FontInfo(family=default_font, source="AI Inferred")]
 
-        # ── LOGO ──
+        # Logo stabilization
         logo = None
+        logo_url = possible_logos[0] if possible_logos else None
         if logo_url:
             fmt = logo_url.split(".")[-1].lower().split("?")[0].split("#")[0]
-            if len(fmt) > 4 or not fmt.isalpha():
-                fmt = "png"
-            logo = ExtractedLogo(
-                url=logo_url, format=fmt, is_svg=("svg" in fmt)
-            )
-
-        # ── STRATEGY + VIBE ──
-        vibe = gemini_data.get("brand_vibe", [])
-        company_summary = gemini_data.get("company_summary", "")
-        raw_strategy = gemini_data.get("strategy")
+            if len(fmt) > 4 or not fmt.isalpha(): fmt = "png"
+            logo = ExtractedLogo(url=logo_url, format=fmt, is_svg=("svg" in fmt))
 
         if not raw_strategy:
-            print("  ⚠️ No strategy from Gemini — using defaults")
             raw_strategy = {
                 "brand_archetype": "The Creator",
-                "brand_voice": "Professional and trustworthy",
-                "content_pillars": ["Industry Trends", "Company Updates",
-                                    "Thought Leadership", "Product Tips"],
-                "visual_style_guide": ["Clean and modern",
-                                       "Consistent use of brand colors"],
-                "recommended_post_types": ["Educational", "Promotional"],
-                "campaign_ideas": ["Showcase unique value proposition",
-                                   "Highlight customer success stories"],
-                "target_audience": "General Professional Audience",
-                "key_strengths": ["Innovation", "Reliability"],
-                "design_style": "Modern Professional",
+                "brand_voice": "Professional",
+                "content_pillars": ["Expertise"],
+                "visual_style_guide": ["Clean"],
+                "recommended_post_types": ["Updates"],
+                "campaign_ideas": ["Showcase"],
+                "target_audience": "Professional",
+                "key_strengths": ["Innovation"],
+                "design_style": "Modern",
             }
+        
+        final_strategy = StrategicAnalysis(**self._normalize_strategy(raw_strategy))
 
-        raw_strategy = self._normalize_strategy(raw_strategy)
 
         total_time = time.time() - start_time
         print(f"\n{'─'*60}")
         print(f"  ⏱️  TOTAL TIME: {total_time:.1f}s")
-        print(f"  📊  Name: {company_name} | Colors: {len(all_colors)} | "
+        print(f"  📊  Name: {company_name} | Colors: {len(colors.all_colors)} | "
               f"Fonts: {len(fonts)} | Logo: {'✅' if logo else '❌'}")
         print(f"{'='*60}\n")
 
         return BrandAssets(
             website_url=final_url,
             company_name=company_name,
-            company_summary=(company_summary or meta_description
-                             or f"Analysis for {company_name}"),
+            company_summary=executive_summary or f"Brand analysis for {company_name}",
             logo=logo,
             colors=colors,
             fonts=fonts,
@@ -254,8 +357,57 @@ class AssetExtractor:
             meta_description=meta_description,
             extraction_timestamp=datetime.now().isoformat(),
             brand_vibe=vibe,
-            strategy=StrategicAnalysis(**raw_strategy),
+            strategy=final_strategy,
         )
+
+    def _condense_text(self, text: str, max_chars: int = 7000) -> str:
+        """Heuristic text condensation: removes boilerplate and focuses on semantic gems."""
+        if not text: return ""
+        
+        lines = [l.strip() for l in text.split("\n") if l.strip()]
+        
+        # Remove common boilerplate lines
+        boilerplate = {"cookie", "privacy policy", "terms of use", "all rights reserved", 
+                       "subscribe to our newsletter", "facebook", "twitter", "instagram", 
+                       "linkedin", "copyright", "log in", "sign up"}
+        
+        filtered = []
+        for line in lines:
+            ll = line.lower()
+            if any(b in ll for b in boilerplate) and len(line) < 100:
+                continue
+            if line not in filtered: # Basic deduplication
+                filtered.append(line)
+        
+        result = "\n".join(filtered)
+        return result[:max_chars]
+
+
+    def _identify_internal_links(self, soup: BeautifulSoup, base_url: str) -> List[str]:
+        """Find key internal pages (About, Services, Contact) for broader brand signal."""
+        if not soup: return []
+        links = []
+        keywords = ["about", "service", "product", "solut", "work", "expert", "capab", "contact"]
+        seen_paths = {urlparse(base_url).path.rstrip("/")}
+        
+        domain = urlparse(base_url).netloc
+        for a in soup.find_all("a", href=True):
+            href = a["href"]
+            full_url = urljoin(base_url, href)
+            parsed = urlparse(full_url)
+            
+            # Only internal links
+            if parsed.netloc != domain and parsed.netloc != "": continue
+            
+            path = parsed.path.rstrip("/")
+            if path in seen_paths or not path: continue
+            
+            if any(k in path.lower() for k in keywords):
+                links.append(full_url)
+                seen_paths.add(path)
+            
+            if len(links) >= 3: break
+        return links
 
     # ═══════════════════════════════════════════════════════
     # EXTERNAL CSS FETCHING
@@ -378,10 +530,6 @@ class AssetExtractor:
         b = int((b1 + m) * 255)
         return f"#{r:02X}{g:02X}{b:02X}"
 
-    # ═══════════════════════════════════════════════════════
-    # COLOR PALETTE BUILDER
-    # ═══════════════════════════════════════════════════════
-
     @staticmethod
     def _color_saturation(hex_color: str) -> float:
         """Calculate color saturation (0-1). Higher = more vibrant."""
@@ -396,6 +544,40 @@ class AssetExtractor:
         except Exception:
             return 0
 
+    # ═══════════════════════════════════════════════════════
+    # COLOR PALETTE BUILDER
+    # ═══════════════════════════════════════════════════════
+
+
+    async def _cluster_colors(self, colors: List[str]) -> List[str]:
+        """Group similar colors and return the most representative ones."""
+        if not colors:
+            return []
+            
+        clusters = [] # List of {color: (r,g,b), count: int}
+        
+        def color_dist(c1, c2):
+            return sum((a - b) ** 2 for a, b in zip(c1, c2)) ** 0.5
+
+        for c in colors:
+            try:
+                h = c.lstrip("#")
+                rgb = (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+            except: continue
+            
+            matched = False
+            for cluster in clusters:
+                if color_dist(rgb, cluster["rgb"]) < 30: # Threshold for similarity
+                    cluster["count"] += 1
+                    matched = True
+                    break
+            if not matched:
+                clusters.append({"color": c, "rgb": rgb, "count": 1})
+        
+        # Sort by count
+        clusters.sort(key=lambda x: x["count"], reverse=True)
+        return [c["color"] for c in clusters]
+
     def _build_color_palette(self, css_colors: List[str], gemini_colors: List[str]) -> ColorPalette:
         """Build a ColorPalette from extracted colors. Prioritize vibrant colors."""
         # Near-neutral colors (very low saturation / common gray shades)
@@ -406,9 +588,29 @@ class AssetExtractor:
                     "#F3F4F6", "#F9FAFB", "#E5E7EB", "#374151", "#4B5563",
                     "#1F2937", "#111827", "#030712"}
 
-        # Sort CSS colors by vibrancy (saturation)
+        # Cluster the CSS colors to find dominant ones
+        clusters = []
+        for c in css_colors:
+            try:
+                h = c.lstrip("#")
+                rgb = (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
+                matched = False
+                for cluster in clusters:
+                    dist = sum((a - b) ** 2 for a, b in zip(rgb, cluster["rgb"])) ** 0.5
+                    if dist < 45: # Aggressive clustering
+                        cluster["count"] += 1
+                        matched = True
+                        break
+                if not matched:
+                    clusters.append({"color": c, "rgb": rgb, "count": 1})
+            except: continue
+        
+        clusters.sort(key=lambda x: x["count"], reverse=True)
+        dominant_css = [c["color"] for c in clusters]
+
+        # Sort dominant by vibrancy
         vibrant = sorted(
-            [c for c in css_colors if c.upper() not in neutrals
+            [c for c in dominant_css if c.upper() not in neutrals
              and self._color_saturation(c) > 0.15],
             key=lambda c: self._color_saturation(c),
             reverse=True
@@ -460,7 +662,7 @@ class AssetExtractor:
                 text_color = c.upper()
                 break
 
-        print(f"    🎨 Palette: primary={primary} secondary={secondary} accent={accent}")
+        print(f"    🎨 Intelligence Palette: primary={primary} secondary={secondary} accent={accent}")
 
         return ColorPalette(
             primary=primary,
@@ -469,6 +671,7 @@ class AssetExtractor:
             background=background,
             text=text_color,
         )
+
 
     # ═══════════════════════════════════════════════════════
     # HTML EXTRACTION METHODS
@@ -562,13 +765,13 @@ class AssetExtractor:
             }),
             lambda: soup.find("img", attrs={
                 "src": lambda x: (x and isinstance(x, str)
-                                  and "logo" in x.lower()
+                                  and any(k in x.lower() for k in ["logo", "brand", "mark"])
                                   and not x.startswith("data:"))
             }),
             lambda: soup.find("a", attrs={
-                "class": lambda x: x and ("brand" in str(x).lower()
-                                          or "logo" in str(x).lower())
+                "class": lambda x: x and any(k in str(x).lower() for k in ["brand", "logo", "navbar-brand"])
             }),
+
         ]
         for selector in selectors:
             try:
@@ -621,48 +824,48 @@ class AssetExtractor:
     def _extract_colors_from_css(
         self, soup: BeautifulSoup, html: str
     ) -> List[str]:
+        """Extract colors with DOM-weighted intelligence."""
         colors = []
+        weighted_colors = [] # List of (color, weight)
         seen = set()
-        if not html:
-            return colors
+        if not html: return colors
 
-        hex_pattern = re.compile(r"#([0-9a-fA-F]{6})\b")
-        hex3_pattern = re.compile(r"#([0-9a-fA-F]{3})\b")
+        hex_pattern = re.compile(r"#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b")
 
+        # 1. High Weight: Header, Nav, Hero section
+        priority_sections = soup.select("header, nav, [class*='hero'], [id*='hero'], [class*='banner']") if soup else []
+        for section in priority_sections:
+            for match in hex_pattern.finditer(str(section)):
+                raw = match.group(1).upper()
+                c = f"#{raw}" if len(raw) == 6 else f"#{raw[0]*2}{raw[1]*2}{raw[2]*2}"
+                weighted_colors.append((c, 5)) # high priority
+
+        # 2. Medium Weight: Root variables
         if soup:
             for style_tag in soup.find_all("style"):
                 if style_tag.string:
-                    for match in hex_pattern.finditer(style_tag.string):
-                        c = f"#{match.group(1).upper()}"
-                        if c not in seen:
-                            colors.append(c)
-                            seen.add(c)
-                    for match in hex3_pattern.finditer(style_tag.string):
-                        short = match.group(1).upper()
-                        c = f"#{short[0]*2}{short[1]*2}{short[2]*2}"
-                        if c not in seen:
-                            colors.append(c)
-                            seen.add(c)
+                    if ":root" in style_tag.string:
+                        for match in hex_pattern.finditer(style_tag.string):
+                            raw = match.group(1).upper()
+                            c = f"#{raw}" if len(raw) == 6 else f"#{raw[0]*2}{raw[1]*2}{raw[2]*2}"
+                            weighted_colors.append((c, 3))
 
-            for el in soup.find_all(attrs={"style": True}):
-                style = el.get("style", "")
-                for match in hex_pattern.finditer(style):
-                    c = f"#{match.group(1).upper()}"
-                    if c not in seen:
-                        colors.append(c)
-                        seen.add(c)
+        # 3. Standard Weight: rest of the page
+        for match in hex_pattern.finditer(html[:50000]):
+            raw = match.group(1).upper()
+            c = f"#{raw}" if len(raw) == 6 else f"#{raw[0]*2}{raw[1]*2}{raw[2]*2}"
+            weighted_colors.append((c, 1))
 
-        # RGB values from HTML
-        rgb_pattern = re.compile(r"rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
-        search_text = str(soup)[:50000] if soup else html[:50000]
-        for match in rgb_pattern.finditer(search_text):
-            r, g, b = int(match.group(1)), int(match.group(2)), int(match.group(3))
-            c = f"#{r:02X}{g:02X}{b:02X}"
+        # Sort by weight
+        weighted_colors.sort(key=lambda x: x[1], reverse=True)
+        
+        for c, w in weighted_colors:
             if c not in seen:
                 colors.append(c)
                 seen.add(c)
+        
+        return colors[:30]
 
-        return colors[:20]
 
     def _extract_fonts_from_html(
         self, soup: BeautifulSoup, html: str

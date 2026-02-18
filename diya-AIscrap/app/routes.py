@@ -129,6 +129,30 @@ def generate_calendar():
         print(f"Error in generate_calendar: {e}")
         return jsonify({'error': str(e)}), 500
 
+@calendar_bp.route('/generate-image', methods=['POST'])
+def generate_post_visual():
+    """Generates a layered image for a specific post."""
+    try:
+        data = request.json
+        brand_data = data.get('brand_data')
+        content = data.get('content') # { headline, body, ... }
+        platform = data.get('platform', 'instagram')
+        
+        if not brand_data:
+             return jsonify({'error': 'Brand data required'}), 400
+             
+        from app.services.image_generator import generate_layered_image
+        
+        result = generate_layered_image(brand_data, content, platform)
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        print(f"Error in generate_post_visual: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 @main_bp.route('/health')
 def health():
     """Health check endpoint"""

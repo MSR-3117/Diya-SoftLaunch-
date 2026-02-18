@@ -24,6 +24,20 @@ def create_app():
     app.register_blueprint(brand_bp)
     app.register_blueprint(calendar_bp)
 
+    # Register New Flows (Modular)
+    import sys
+    import importlib.util
+
+    # Add project root to sys.path
+    root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    if root_dir not in sys.path:
+        sys.path.insert(0, root_dir)
+
+
+
+
+
+
     # SPA catch-all: serve React index.html for all non-API routes
     @app.route('/', defaults={'path': ''})
     @app.route('/<path:path>')

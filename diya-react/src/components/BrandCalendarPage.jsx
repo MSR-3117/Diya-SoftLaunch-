@@ -4,6 +4,7 @@ import gsap from 'gsap';
 import CalendarSidebar from './ui/CalendarSidebar';
 import { PLATFORMS_DATA } from './ui/PlatformIcons';
 import { useBrand } from '../context/BrandContext';
+import ImageEditor from './ImageEditor';
 import '../css/calendar.css';
 
 // Mock data for placeholder posts with colorful variants
@@ -73,6 +74,7 @@ export default function BrandCalendarPage() {
 
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedPost, setSelectedPost] = useState(null);
+    const [editingPost, setEditingPost] = useState(null);
     const [viewMode, setViewMode] = useState('week');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -448,6 +450,19 @@ export default function BrandCalendarPage() {
                 {viewMode === 'day' && renderDayView()}
             </div>
 
+            {/* Image Editor Modal */}
+            {editingPost && (
+                <ImageEditor
+                    post={editingPost}
+                    onClose={() => setEditingPost(null)}
+                    onSave={(dataURL) => {
+                        // Quick update for demo
+                        if (editingPost) editingPost.image = dataURL;
+                        setEditingPost(null);
+                    }}
+                />
+            )}
+
             {/* Spotlight Overlay */}
             {selectedPost && (
                 <div
@@ -511,7 +526,15 @@ export default function BrandCalendarPage() {
                             </div>
 
                             <div className="spotlight-actions">
-                                <button className="spotlight-action-btn primary">Edit Post</button>
+                                <button
+                                    className="spotlight-action-btn primary"
+                                    onClick={() => {
+                                        setEditingPost(selectedPost);
+                                        closeSpotlight();
+                                    }}
+                                >
+                                    Edit Visual
+                                </button>
                                 <button className="spotlight-action-btn secondary">Swap Date</button>
                                 <button className="spotlight-action-btn more">⋯</button>
                             </div>
