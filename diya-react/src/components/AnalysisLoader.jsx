@@ -1,18 +1,16 @@
 import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import gsap from 'gsap';
 import '../css/analysis-loader.css';
 import BoxLoader from './ui/BoxLoader';
 import GravityShapes from './ui/GravityShapes';
 import BrandFacts from './ui/BrandFacts';
-import { useBrand } from '../context/BrandContext';
 
 const LOADING_STEPS = [
-    "Connecting to your website...",
-    "Analyzing your brand's unique voice...",
-    "Extracting color palette & typography...",
-    "Generating comprehensive brand summary...",
-    "Finalizing your brand persona..."
+    "Analyzing your responses...",
+    "Detecting your brand's unique voice...",
+    "Curating your perfect color palette...",
+    "Designing your custom persona..."
 ];
 
 export default function AnalysisLoader() {
@@ -20,71 +18,35 @@ export default function AnalysisLoader() {
     const containerRef = useRef(null);
     const textRef = useRef(null);
     const [statusText, setStatusText] = useState(LOADING_STEPS[0]);
-    const [stepIndex, setStepIndex] = useState(0);
 
-    // Get URL and analyzeBrand from context
-    const { url, analyzeBrand, error } = useBrand();
-    const [apiError, setApiError] = useState(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const analysisStarted = useRef(false);
+    const { state } = useLocation();
+    const fetchedDataRef = useRef(null);
+    const timelineRef = useRef(null); // Keep reference to timeline
 
-    // Start API call on mount
-    useEffect(() => {
-        if (analysisStarted.current) return;
-        analysisStarted.current = true;
-
-        if (!url) {
-            navigate('/brand-intake');
-            return;
-        }
-
-        setIsAnalyzing(true);
-        console.log("Starting brand analysis for:", url);
-
-        analyzeBrand(url)
-            .then(() => {
-                console.log("Analysis successful!");
-                setIsAnalyzing(false);
-
-                // Animate out and navigate
-                gsap.to(containerRef.current, {
-                    opacity: 0,
-                    scale: 0.95,
-                    duration: 0.8,
-                    ease: "power2.inOut",
-                    onComplete: () => {
-                        console.log("Navigating to Persona page...");
-                        navigate('/brand-persona');
-                    }
-                });
-            })
-            .catch((err) => {
-                console.error('Brand analysis failed:', err);
-                setApiError(err.message || 'Failed to analyze brand');
-                setIsAnalyzing(false);
-            });
-    }, [url, analyzeBrand, navigate]);
-
-    // Cleanup effect for text animation
     useLayoutEffect(() => {
-        if (apiError || !isAnalyzing) return;
-
+        let isMounted = true;
         const ctx = gsap.context(() => {
-            const tl = gsap.timeline({ repeat: -1 });
+            const tl = gsap.timeline();
+            timelineRef.current = tl;
 
+            // --- A. Master Text Cycle (Total ~10s) ---
             LOADING_STEPS.forEach((step, index) => {
-                tl.call(() => {
-                    setStatusText(step);
-                    setStepIndex(index);
-                })
+                // 1. Set Text (Immediate)
+                tl.call(() => setStatusText(step))
+
+                    // 2. Fade In (Smooth)
                     .fromTo(textRef.current,
                         { opacity: 0, y: 10 },
                         { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" }
                     )
+
+                    // 3. Hold (Readability)
                     .to(textRef.current, {
                         opacity: 1,
-                        duration: 2
+                        duration: 1.2
                     })
+
+                    // 4. Fade Out (Clean exit, except last one stays a bit longer before page exit)
                     .to(textRef.current, {
                         opacity: 0,
                         y: -10,
@@ -92,105 +54,112 @@ export default function AnalysisLoader() {
                         ease: "power2.in"
                     });
             });
+
+            // --- B. Synchronization Point ---
+            tl.addLabel("syncPoint");
+            tl.call(() => {
+                console.log("AnalysisLoader: Reached syncPoint. Ref value:", fetchedDataRef.current);
+                if (!fetchedDataRef.current) {
+                    console.log("AnalysisLoader: Data not ready, pausing timeline.");
+                    tl.pause();
+                } else {
+                    console.log("AnalysisLoader: Data already ready, skipping pause.");
+                }
+            });
+
+            // Small spacer
+            tl.to({}, { duration: 0.2 });
+
+            // --- C. Exit Sequence ---
+            tl.call(() => {
+                console.log("AnalysisLoader: Exit Sequence Triggered. fetchedDataRef.current exists:", !!fetchedDataRef.current);
+
+                const fallbackName = state?.url ?
+                    state.url.replace(/^https?:\/\//, '').replace('www.', '').split('.')[0].toUpperCase() :
+                    'BRAND';
+
+                const finalData = fetchedDataRef.current || {
+                    name: fallbackName,
+                    description: "We couldn't fetch details automatically. Please enter them manually.",
+                    colors: ['#111111', '#555555', '#999999'],
+                    isFallback: true
+                };
+
+                gsap.to(containerRef.current, {
+                    opacity: 0, scale: 0.95, duration: 0.8, ease: "power2.inOut",
+                    onComplete: () => {
+                        console.log("AnalysisLoader: Navigating with finalData:", JSON.stringify(finalData));
+                        navigate('/brand-persona', { state: { brandData: finalData } });
+                    }
+                });
+            });
+
         }, containerRef);
 
-        return () => ctx.revert();
-    }, [apiError, isAnalyzing]);
+        // --- D. API Fetch (Side Effect) ---
+        console.log("AnalysisLoader: Component mounted. state.url:", state?.url);
 
-    // Removed the complex useEffect watcher for navigation
+        if (state?.url && fetchedDataRef.current === null) { // Only fetch if URL exists and not already fetched
+            // Add a minimum delay to ensure the "experience" feels substantial
+            const minDelay = new Promise(resolve => setTimeout(resolve, 1000));
 
+            const fetchData = fetch('http://127.0.0.1:5555/brand/analyze', {
+                method: 'POST',
+                mode: 'cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ source: 'url', url: state.url })
+            })
+                .then(res => {
+                    console.log("AnalysisLoader: Fetch response status:", res.status);
+                    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+                    return res.json();
+                })
+                .then(data => {
+                    console.log("AnalysisLoader: Successfully parsed JSON data:", data);
+                    return data;
+                })
+                .catch(err => {
+                    console.error("AnalysisLoader: Fetch logic failed:", err);
+                    return { success: false, error: err.message };
+                });
 
-    // Render error state
-    if (apiError) {
-        return (
-            <div className="analysis-page" ref={containerRef} style={{
-                background: '#f9f9f9',
-                position: 'relative',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                height: '100vh',
-                gap: '2rem'
-            }}>
-                <GravityShapes />
-                <div style={{
-                    position: 'relative',
-                    zIndex: 10,
-                    textAlign: 'center',
-                    padding: '2rem',
-                    background: 'white',
-                    borderRadius: '16px',
-                    boxShadow: '0 4px 24px rgba(0,0,0,0.1)',
-                    maxWidth: '400px'
-                }}>
-                    <div style={{
-                        fontSize: '3rem',
-                        marginBottom: '1rem'
-                    }}>⚠️</div>
-                    <h2 style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: '1.5rem',
-                        fontWeight: 600,
-                        color: '#333',
-                        marginBottom: '1rem'
-                    }}>Analysis Failed</h2>
-                    <p style={{
-                        fontFamily: '"Inter", sans-serif',
-                        fontSize: '1rem',
-                        color: '#666',
-                        marginBottom: '1.5rem',
-                        lineHeight: 1.5
-                    }}>
-                        {apiError}
-                    </p>
-                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                        <button
-                            onClick={() => navigate('/brand-intake')}
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '8px',
-                                border: '1px solid #ddd',
-                                background: 'white',
-                                fontFamily: '"Inter", sans-serif',
-                                fontSize: '0.9rem',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            ← Go Back
-                        </button>
-                        <button
-                            onClick={() => {
-                                setApiError(null);
-                                analysisStarted.current = false;
-                                setIsAnalyzing(true);
-                                analyzeBrand(url)
-                                    .then(() => setIsAnalyzing(false))
-                                    .catch((err) => {
-                                        setApiError(err.message);
-                                        setIsAnalyzing(false);
-                                    });
-                            }}
-                            style={{
-                                padding: '0.75rem 1.5rem',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: '#00c237',
-                                color: 'white',
-                                fontFamily: '"Inter", sans-serif',
-                                fontSize: '0.9rem',
-                                fontWeight: 500,
-                                cursor: 'pointer'
-                            }}
-                        >
-                            Retry
-                        </button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+            Promise.all([minDelay, fetchData])
+                .then(([_, data]) => {
+                    if (!isMounted) {
+                        console.log("AnalysisLoader: Promise.all resolved but component unmounted.");
+                        return;
+                    }
+                    window.lastFetchedData = data;
+
+                    if (data && data.success && data.brand_data) {
+                        fetchedDataRef.current = data.brand_data;
+                    } else {
+                        fetchedDataRef.current = null;
+                    }
+
+                    if (timelineRef.current && timelineRef.current.paused()) {
+                        timelineRef.current.play();
+                    }
+                })
+                .catch(err => {
+                    console.error("AnalysisLoader: Promise.all fatal error:", err);
+                    if (!isMounted) return;
+                    fetchedDataRef.current = null;
+                    if (timelineRef.current && timelineRef.current.paused()) {
+                        timelineRef.current.play();
+                    }
+                });
+        } else if (!state?.url && fetchedDataRef.current === null) {
+            console.warn("AnalysisLoader: No URL in state, skipping fetch.");
+            fetchedDataRef.current = {};
+        }
+
+        return () => {
+            console.log("AnalysisLoader: Cleaning up context/isMounted=false");
+            isMounted = false;
+            ctx.revert();
+        };
+    }, [navigate, state]);
 
     return (
         <div className="analysis-page" ref={containerRef} style={{ background: '#f9f9f9', position: 'relative', overflow: 'hidden' }}>
@@ -209,33 +178,13 @@ export default function AnalysisLoader() {
                     fontWeight: 500,
                     color: '#666',
                     textAlign: 'center',
-                    minHeight: '2rem',
+                    minHeight: '2rem', // Prevent layout shift
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
                     letterSpacing: '0.02em'
                 }}>
                     {statusText}
-                </div>
-
-                {/* Progress indicator */}
-                <div style={{
-                    marginTop: '1.5rem',
-                    display: 'flex',
-                    gap: '0.5rem'
-                }}>
-                    {LOADING_STEPS.map((_, i) => (
-                        <div
-                            key={i}
-                            style={{
-                                width: '8px',
-                                height: '8px',
-                                borderRadius: '50%',
-                                background: i <= stepIndex ? '#00c237' : '#ddd',
-                                transition: 'background 0.3s ease'
-                            }}
-                        />
-                    ))}
                 </div>
             </div>
 

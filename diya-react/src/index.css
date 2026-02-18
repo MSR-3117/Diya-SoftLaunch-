@@ -30,8 +30,7 @@
     /* Align to top to use upper space */
     /* Robust vertical centering removed in favor of top-loading */
     position: relative;
-    padding-top: 12vh;
-    /* Adjusted to 12vh (approx 120px) to sit just below navbar */
+    padding-top: 10vh;
     padding-bottom: 0;
     border-bottom: none !important;
 }
@@ -388,20 +387,14 @@ ul {
 }
 
 .hero-title {
-    font-size: clamp(4rem, 16vw, 16rem);
-    /* Massive size to fill top space */
+    font-size: clamp(2.8rem, 15vw, 16rem);
     line-height: 0.85;
-    /* Tight leading */
     margin-top: 0;
-    /* Reset margin */
-    margin-bottom: 1rem;
-    /* Reduced gap */
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
     letter-spacing: -0.04em;
     overflow: hidden;
-    /* For reveal animation */
     color: var(--text-color);
     padding: 0;
-    /* Removed 0.2em padding to fix top gap */
 }
 
 .hero-title span {
@@ -410,29 +403,22 @@ ul {
 
 /* Hero Subtitle Shimmer */
 .hero-subtitle {
-    font-size: 1.5rem;
-    /* Larger */
+    font-size: clamp(0.9rem, 2.5vw, 1.5rem);
     font-weight: 500;
-    /* Semi-bold */
-    margin-bottom: 1.5rem;
-    /* Reduced from 3rem */
+    margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
     color: var(--text-color);
-
-    /* Premium styling without background-clip artifacts */
     background: none;
     -webkit-background-clip: border-box;
     background-clip: border-box;
     -webkit-text-fill-color: initial;
-
     color: var(--text-color);
     opacity: 0.8;
     animation: breathe 4s ease-in-out infinite alternate;
-
-    /* Flexbox for robust centering & spacing */
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
     gap: 0.35em;
+    padding: 0 1rem;
 }
 
 @keyframes breathe {
@@ -505,23 +491,20 @@ section {
 
 .morph-letter {
     font-family: var(--font-heading);
-    font-size: 15vw;
-    /* Massive */
+    font-size: min(15vw, 200px);
     font-weight: 800;
     line-height: 1;
     color: transparent;
     -webkit-text-stroke: 4px var(--text-color);
-    width: 12vw;
-    /* Fixed width for alignment with icons */
+    width: min(12vw, 160px);
     text-align: center;
     display: flex;
     justify-content: center;
 }
 
 .morph-icon-wrapper {
-    width: 12vw;
-    /* Match letter width */
-    height: 12vw;
+    width: min(12vw, 160px);
+    height: min(12vw, 160px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -538,15 +521,12 @@ section {
 
 .marquee-text {
     font-family: var(--font-heading);
-    font-size: 10vw;
+    font-size: min(10vw, 140px);
     font-weight: 700;
     color: transparent;
     -webkit-text-stroke: 2px var(--text-color);
-    /* Dark black stroke */
     display: flex;
-    /* Allow flex gap/margins */
     padding-right: 0;
-    /* Remove block padding */
     will-change: transform;
 }
 
@@ -594,12 +574,10 @@ section {
 .manifesto-word {
     position: absolute;
     font-family: var(--font-heading);
-    font-size: 12vw;
-    /* Reduced from 15vw to fit "INTELLIGENCE" */
+    font-size: clamp(2rem, 12vw, 180px);
     font-weight: 700;
     line-height: 1;
     color: transparent;
-    /* Start as outline */
     -webkit-text-stroke: 2px var(--text-color);
     text-transform: uppercase;
     white-space: nowrap;
@@ -922,4 +900,221 @@ section {
 #home>section,
 .hero {
     padding-bottom: 0 !important;
+}
+
+/* ==========================================================
+   RESPONSIVE BREAKPOINTS
+   ========================================================== */
+
+/* --- Small Mobile (< 480px) --- */
+@media (max-width: 480px) {
+    .header-dock-wrapper {
+        top: 0.5rem;
+    }
+
+    .nav-dock {
+        gap: 0.25rem;
+        padding: 0.3rem 0.4rem;
+    }
+
+    .dock-logo {
+        height: 32px;
+        width: 32px;
+        margin-left: 0.25rem;
+    }
+
+    .dock-link {
+        padding: 0.5rem 0.6rem;
+        font-size: 0.72rem;
+    }
+
+    .dock-cta {
+        padding: 0.5rem 0.8rem;
+        font-size: 0.72rem;
+    }
+
+    .dock-divider {
+        height: 16px;
+    }
+
+    .hero {
+        padding-top: 8vh;
+    }
+
+    .hero-title {
+        font-size: clamp(2rem, 13vw, 4rem);
+        /* Reduced max size for cleaner fit */
+        line-height: 0.9;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-subtitle {
+        font-size: clamp(0.9rem, 4vw, 1.1rem);
+        margin-bottom: 2rem;
+        /* More space for button */
+        padding: 0 0.5rem;
+    }
+
+    section {
+        padding: 4rem 0;
+    }
+
+    #vision {
+        padding-top: 4rem !important;
+    }
+
+    .morph-letter {
+        font-size: 14vw;
+        -webkit-text-stroke: 2px var(--text-color);
+        width: 12vw;
+    }
+
+    .morph-icon-wrapper {
+        width: 12vw;
+        height: 12vw;
+    }
+
+    .manifesto-word {
+        font-size: clamp(1.8rem, 12vw, 4rem);
+        -webkit-text-stroke: 1px var(--text-color);
+    }
+
+    .marquee-text {
+        font-size: 12vw;
+    }
+
+    .marquee-word {
+        margin-right: 1.5rem;
+    }
+
+    .marquee-word:last-child {
+        margin-right: 4rem;
+    }
+
+    .glass-panel {
+        width: 85vw;
+        height: auto;
+        min-height: 300px;
+        padding: 2rem 1.5rem;
+        border-radius: 24px;
+    }
+
+    .card-title {
+        font-size: 2rem;
+    }
+
+    .card-desc {
+        font-size: 1rem;
+    }
+
+    /* Brand Statement Mobile Fixes */
+    .statement-word {
+        margin-right: 0.2em !important;
+        font-size: clamp(2rem, 10vw, 3rem) !important;
+    }
+
+    .word-wrapper {
+        margin-right: 0.1em !important;
+        display: inline-block !important;
+    }
+
+    .card-icon-large {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .footer-link {
+        font-size: clamp(2rem, 10vw, 4rem);
+    }
+}
+
+/* --- Standard Mobile / Small Tablet (481px - 768px) --- */
+@media (min-width: 481px) and (max-width: 768px) {
+    .nav-dock {
+        gap: 0.5rem;
+        padding: 0.4rem 0.5rem;
+    }
+
+    .dock-logo {
+        height: 36px;
+        width: 36px;
+    }
+
+    .dock-link {
+        padding: 0.6rem 0.8rem;
+        font-size: 0.8rem;
+    }
+
+    .dock-cta {
+        padding: 0.6rem 1rem;
+        font-size: 0.8rem;
+    }
+
+    .hero {
+        padding-top: 9vh;
+    }
+
+    .hero-title {
+        font-size: clamp(3rem, 12vw, 7rem);
+    }
+
+    section {
+        padding: 6rem 0;
+    }
+
+    .glass-panel {
+        width: 75vw;
+        max-width: none;
+        padding: 3rem 2rem;
+    }
+
+    .card-title {
+        font-size: 2.5rem;
+    }
+}
+
+/* --- Tablet / Small Laptop (769px - 1024px) --- */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .dock-link {
+        padding: 0.65rem 1rem;
+        font-size: 0.88rem;
+    }
+
+    .hero-title {
+        font-size: clamp(4rem, 13vw, 12rem);
+    }
+
+    section {
+        padding: 8rem 0;
+    }
+}
+
+/* --- Ultra-Wide (> 1920px) --- */
+@media (min-width: 1921px) {
+    .hero-content {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .hero-title {
+        font-size: 16rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1.6rem;
+    }
+
+    .manifesto-word {
+        font-size: 180px;
+    }
+
+    .morph-letter {
+        font-size: 200px;
+        width: 160px;
+    }
+
+    .morph-icon-wrapper {
+        width: 160px;
+        height: 160px;
+    }
 }

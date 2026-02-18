@@ -1,0 +1,795 @@
+/* ============================================================
+   BRAND BUILDER — UI OVERHAUL v2
+   High-contrast, wide-stage, cinematic design
+   ============================================================ */
+
+:root {
+    --bb-bg: #f5f5f0;
+    --bb-accent: #00c237;
+    --bb-accent-glow: rgba(0, 194, 55, 0.25);
+    --bb-text: #0a0a0a;
+    --bb-text-secondary: #3a3a3a;
+    --bb-muted: #666;
+    --bb-border: rgba(0, 0, 0, 0.1);
+    --bb-card: rgba(255, 255, 255, 0.85);
+    --bb-card-hover: rgba(255, 255, 255, 0.95);
+    --bb-radius: 16px;
+    --bb-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* === Page Shell === */
+.bb-page {
+    min-height: 100vh;
+    width: 100vw;
+    background-color: var(--bb-bg);
+    color: var(--bb-text);
+    font-family: var(--bb-font);
+    position: relative;
+    overflow-x: hidden;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 80px 80px;
+}
+
+/* === Aurora === */
+.bb-aurora {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.bb-aurora-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(140px);
+    opacity: 0.08;
+    will-change: transform;
+    transition: background 2s ease;
+}
+
+.bb-aurora-blob:nth-child(1) {
+    width: 700px;
+    height: 700px;
+    top: -15%;
+    right: -10%;
+    background: var(--bb-accent);
+}
+
+.bb-aurora-blob:nth-child(2) {
+    width: 500px;
+    height: 500px;
+    bottom: -10%;
+    left: -5%;
+    background: #6366f1;
+}
+
+.bb-aurora-blob:nth-child(3) {
+    width: 400px;
+    height: 400px;
+    top: 45%;
+    left: 40%;
+    background: #06b6d4;
+}
+
+/* === Main Stage === */
+.bb-stage {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 5.5rem 3rem 6rem;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* === Progress Bar === */
+.bb-progress-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 2.5rem;
+}
+
+.bb-progress-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ccc;
+    transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.bb-progress-dot.active {
+    background: var(--bb-accent);
+    width: 28px;
+    border-radius: 4px;
+    box-shadow: 0 0 10px var(--bb-accent-glow);
+}
+
+.bb-progress-dot.done {
+    background: var(--bb-accent);
+}
+
+.bb-progress-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--bb-muted);
+    margin-left: 0.5rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+/* === Step Header === */
+.bb-step-header {
+    margin-bottom: 2rem;
+}
+
+.bb-step-num {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--bb-accent);
+    margin-bottom: 0.5rem;
+    display: inline-block;
+}
+
+.bb-step-title {
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.05em;
+    color: var(--bb-text);
+    margin: 0;
+    overflow: hidden;
+}
+
+.bb-step-title .char {
+    display: inline-block;
+    will-change: transform, opacity;
+}
+
+.bb-step-sub {
+    font-size: 1.05rem;
+    color: var(--bb-text-secondary);
+    margin-top: 0.75rem;
+    line-height: 1.5;
+    max-width: 550px;
+    font-weight: 450;
+}
+
+/* === IDENTITY STEP — Side-by-Side === */
+.bb-identity-stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    flex: 1;
+    align-items: start;
+}
+
+.bb-identity-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.bb-input-group label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-bottom: 0.4rem;
+}
+
+.bb-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--bb-text);
+    padding: 0.6rem 0;
+    border-bottom: 2px solid #d0d0d0;
+    outline: none;
+    font-family: var(--bb-font);
+    transition: border-color 0.3s ease;
+    letter-spacing: -0.02em;
+}
+
+.bb-input::placeholder {
+    color: #b0b0b0;
+    font-weight: 500;
+}
+
+.bb-input:focus {
+    border-bottom-color: var(--bb-accent);
+}
+
+.bb-input.sm {
+    font-size: 1.15rem;
+    font-weight: 500;
+}
+
+.bb-textarea {
+    width: 100%;
+    border: 2px solid #e0e0e0;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--bb-text);
+    padding: 1rem;
+    outline: none;
+    font-family: var(--bb-font);
+    resize: vertical;
+    min-height: 90px;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    line-height: 1.6;
+}
+
+.bb-textarea:focus {
+    border-color: var(--bb-accent);
+    box-shadow: 0 0 0 3px var(--bb-accent-glow);
+}
+
+.bb-textarea::placeholder {
+    color: #aaa;
+}
+
+/* --- Live Brand Card --- */
+.bb-brand-card {
+    background: var(--bb-text);
+    color: #fff;
+    border-radius: 20px;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 300px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.bb-brand-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 194, 55, 0.08) 0%, transparent 60%);
+    animation: bbCardGlow 6s ease infinite alternate;
+}
+
+@keyframes bbCardGlow {
+    0% {
+        transform: translate(-10%, -10%);
+    }
+
+    100% {
+        transform: translate(10%, 10%);
+    }
+}
+
+.bb-brand-card-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.25);
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.bb-brand-card-name {
+    font-size: clamp(2rem, 4vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    min-height: 3rem;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.bb-brand-card-tagline {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 0.75rem;
+    font-style: italic;
+    position: relative;
+    min-height: 1.5rem;
+}
+
+.bb-brand-card-empty {
+    color: rgba(255, 255, 255, 0.15);
+    font-size: 1.2rem;
+    font-weight: 600;
+    position: relative;
+}
+
+/* === COLORS STEP === */
+.bb-color-stage {
+    flex: 1;
+}
+
+.bb-color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+.bb-color-card {
+    aspect-ratio: 1.2;
+    border-radius: 14px;
+    cursor: pointer;
+    border: 3px solid transparent;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.bb-color-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12);
+}
+
+.bb-color-card.selected {
+    border-color: #fff;
+    transform: scale(1.04);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2), inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+.bb-color-check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 26px;
+    height: 26px;
+    background: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bb-color-card.selected .bb-color-check {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.bb-color-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.bb-color-hexes {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+}
+
+.bb-color-hexes span {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+/* Custom Picker */
+.bb-custom-picker {
+    margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.bb-custom-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: var(--bb-card);
+    border: 1.5px solid var(--bb-border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--bb-text-secondary);
+    transition: all 0.3s ease;
+    font-family: var(--bb-font);
+}
+
+.bb-custom-toggle:hover {
+    background: #fff;
+    border-color: var(--bb-accent);
+    color: var(--bb-text);
+}
+
+.bb-custom-input {
+    width: 48px;
+    height: 48px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    padding: 0;
+    overflow: hidden;
+}
+
+.bb-custom-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.bb-custom-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 10px;
+}
+
+.bb-custom-hex {
+    font-size: 1rem;
+    font-weight: 800;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--bb-text);
+}
+
+/* === TYPOGRAPHY STEP === */
+.bb-font-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    width: 100%;
+}
+
+.bb-font-card {
+    padding: 1.5rem;
+    border-radius: 14px;
+    background: var(--bb-card);
+    border: 2px solid var(--bb-border);
+    cursor: pointer;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.bb-font-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    border-color: #bbb;
+    background: var(--bb-card-hover);
+}
+
+.bb-font-card.selected {
+    border-color: var(--bb-accent);
+    box-shadow: 0 8px 28px var(--bb-accent-glow);
+    background: #fff;
+}
+
+.bb-font-preview {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.6rem;
+    color: var(--bb-text);
+}
+
+.bb-font-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--bb-text-secondary);
+}
+
+.bb-font-style {
+    font-size: 0.7rem;
+    color: var(--bb-muted);
+    margin-top: 0.2rem;
+}
+
+/* === VOICE STEP === */
+.bb-voice-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    width: 100%;
+    max-width: 900px;
+}
+
+.bb-voice-pill {
+    padding: 0.65rem 1.3rem;
+    border-radius: 50px;
+    background: #fff;
+    border: 2px solid #d0d0d0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--bb-text);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    font-family: var(--bb-font);
+}
+
+.bb-voice-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: #999;
+}
+
+.bb-voice-pill.on {
+    background: var(--bb-text);
+    color: #fff;
+    border-color: var(--bb-text);
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+}
+
+.bb-voice-hint {
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--bb-muted);
+}
+
+.bb-selected-bar {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bb-card);
+    border: 1.5px solid var(--bb-border);
+    border-radius: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.bb-selected-bar-label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-right: 0.5rem;
+}
+
+.bb-selected-tag {
+    padding: 0.3rem 0.7rem;
+    background: var(--bb-accent);
+    color: #fff;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 800;
+}
+
+/* === REVIEW STEP === */
+.bb-review-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    width: 100%;
+}
+
+.bb-review-card {
+    padding: 1.5rem;
+    background: var(--bb-card);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1.5px solid var(--bb-border);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.bb-review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.bb-review-card.span {
+    grid-column: 1 / -1;
+}
+
+.bb-review-label {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--bb-muted);
+    margin-bottom: 0.6rem;
+}
+
+.bb-review-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--bb-text);
+    letter-spacing: -0.02em;
+}
+
+.bb-review-value.sm {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--bb-text-secondary);
+}
+
+.bb-review-swatches {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.bb-review-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(0, 0, 0, 0.1);
+}
+
+.bb-review-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.bb-review-tag {
+    padding: 0.3rem 0.7rem;
+    background: rgba(0, 0, 0, 0.07);
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--bb-text);
+}
+
+/* === Navigation Dock === */
+.bb-dock {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #fff;
+    padding: 0.45rem;
+    border-radius: 50px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12);
+    border: 1.5px solid rgba(0, 0, 0, 0.06);
+    z-index: 100;
+}
+
+.bb-dock-back {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    background: #f0f0f0;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    font-family: var(--bb-font);
+}
+
+.bb-dock-back:hover {
+    background: #e0e0e0;
+    color: var(--bb-text);
+}
+
+.bb-dock-next {
+    height: 46px;
+    padding: 0 1.8rem;
+    border-radius: 50px;
+    border: none;
+    background: var(--bb-text);
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    font-family: var(--bb-font);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    letter-spacing: -0.01em;
+}
+
+.bb-dock-next:hover:not(:disabled) {
+    background: var(--bb-accent);
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px var(--bb-accent-glow);
+}
+
+.bb-dock-next:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.bb-dock-next .arr {
+    transition: transform 0.3s ease;
+}
+
+.bb-dock-next:hover:not(:disabled) .arr {
+    transform: translateX(4px);
+}
+
+/* === Responsive === */
+@media (max-width: 900px) {
+    .bb-stage {
+        padding: 5rem 1.5rem 6rem;
+    }
+
+    .bb-identity-stage {
+        grid-template-columns: 1fr;
+    }
+
+    .bb-color-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .bb-font-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .bb-review-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .bb-stage {
+        padding: 4.5rem 1rem 5rem;
+    }
+
+    .bb-step-title {
+        font-size: clamp(2rem, 10vw, 2.8rem);
+    }
+
+    .bb-input {
+        font-size: 1.3rem;
+    }
+
+    .bb-color-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+    }
+
+    .bb-font-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .bb-voice-pill {
+        font-size: 0.8rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .bb-dock {
+        bottom: 0.75rem;
+        left: 0.75rem;
+        right: 0.75rem;
+        transform: none;
+        justify-content: space-between;
+    }
+}

@@ -8,20 +8,19 @@ class GeminiService:
     """Service to analyze brand assets using Gemini 2.0 Flash/Pro."""
 
     def __init__(self):
+        self.available_models = {
+            "fast": "models/gemini-1.5-flash",
+            "reasoning": "models/gemini-1.5-pro",
+            "vision": "models/gemini-1.5-pro",
+            "image": "gemini-2.0-flash-exp-image-generation"
+        }
+        
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:
-            # We don't raise here to allow app startup, but methods will fail
+            # We don't raise here to allow app startup, but methods will still fail during genai calls
             print("WARNING: GOOGLE_API_KEY not set.")
         else:
             genai.configure(api_key=api_key)
-            
-            
-            self.available_models = {
-                "fast": None,      # e.g., gemini-1.5-flash
-                "reasoning": None, # e.g., gemini-1.5-pro
-                "vision": None,    # Any model with vision capabilities
-                "image": None      # e.g., imagen-3.0-generate-001
-            }
             self._identify_models()
 
     def _identify_models(self):

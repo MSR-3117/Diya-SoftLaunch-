@@ -73,7 +73,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    padding-top: 0;
     width: 100%;
     max-width: 1000px;
     margin: 0 auto;
@@ -82,7 +83,7 @@
 }
 
 .system-headline {
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: clamp(3rem, 10vw, 6.5rem);
     font-weight: 800;
     letter-spacing: -0.04em;
     text-align: center;
@@ -143,12 +144,12 @@
 
 /* --- Manual Card --- */
 .manual-card {
-    margin-top: 3rem;
+    margin-top: 1.5rem;
     width: 100%;
     max-width: 400px;
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.2);
     border-radius: 16px;
     padding: 1.5rem;
     cursor: pointer;

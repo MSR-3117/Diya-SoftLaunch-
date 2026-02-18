@@ -15,7 +15,7 @@ const ICONS = [
     { color: '#ea4c89', path: <path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z" /> }
 ];
 
-export default function ModernButton({ children, onClick, className = '' }) {
+export default function ModernButton({ children, onClick, className = '', disabled = false }) {
     const btnRef = useRef(null);
     const textRef = useRef(null);
     const particleContainerRef = useRef(null);
@@ -130,6 +130,8 @@ export default function ModernButton({ children, onClick, className = '' }) {
             ref={btnRef}
             className={`modern-btn ${className}`}
             onClick={onClick}
+            disabled={disabled}
+            style={disabled ? { opacity: 0.35, pointerEvents: 'none', cursor: 'not-allowed' } : {}}
         >
             <div className="modern-btn-text" ref={textRef}>
                 {renderText()}

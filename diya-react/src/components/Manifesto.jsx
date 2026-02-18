@@ -150,7 +150,7 @@ export default function Manifesto() {
                 .to(icons[1], { autoAlpha: 0, duration: 0 }, ">")
                 .fromTo(letters[1],
                     { rotationY: -90, autoAlpha: 0, filter: "brightness(3)" },
-                    { rotationY: 0, autoAlpha: 1, filter: "brightness(1)", duration: 0.5, ease: "back.out(2)" }, ">");
+                    { rotationY: 0, autoAlpha: 1, scale: 1, filter: "brightness(1)", duration: 0.5, ease: "back.out(2)" }, ">");
 
             // Shockwave I
             tl.to(shockwaves[1], { autoAlpha: 1, opacity: 1, borderColor: '#fd5949', duration: 0 }, "<")
@@ -165,7 +165,7 @@ export default function Manifesto() {
                 .to(icons[2], { scaleX: 2, scaleY: 0.1, autoAlpha: 0, duration: 0.15 })
                 .fromTo(letters[2],
                     { clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0% 100%)", autoAlpha: 1, skewX: -20 },
-                    { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)", skewX: 0, duration: 0.4, ease: "power4.out" }, "<");
+                    { clipPath: "polygon(0 0, 100% 0, 100% 100%, 0% 100%)", skewX: 0, scale: 1, duration: 0.4, ease: "power4.out" }, "<");
 
             // Shockwave S
             tl.to(shockwaves[2], { autoAlpha: 1, opacity: 0.8, borderColor: '#0a66c2', duration: 0 }, "<")
@@ -180,7 +180,7 @@ export default function Manifesto() {
                 .to(icons[3], { scale: 0, rotate: -45, duration: 0.2, ease: "back.in(2)" })
                 .fromTo(letters[3],
                     { scaleY: 0, autoAlpha: 0 },
-                    { scaleY: 1, autoAlpha: 1, duration: 0.4, ease: "elastic.out(1, 0.7)" }, ">");
+                    { scale: 1, autoAlpha: 1, duration: 0.4, ease: "elastic.out(1, 0.7)" }, ">");
 
             // Shockwave X
             tl.to(shockwaves[3], { autoAlpha: 1, opacity: 1, borderColor: '#000', duration: 0 }, "<")
@@ -208,7 +208,7 @@ export default function Manifesto() {
             tl.to(icons[5], { autoAlpha: 0, duration: 0.1 })
                 .fromTo(letters[5],
                     { autoAlpha: 0, skewX: -45, x: 20 },
-                    { autoAlpha: 1, skewX: 0, x: 0, duration: 0.1, ease: "power4.out" }, ">")
+                    { autoAlpha: 1, skewX: 0, x: 0, scale: 1, duration: 0.1, ease: "power4.out" }, ">")
                 .to(letters[5], { x: -3, y: 3, duration: 0.05, repeat: 3, yoyo: true }, "<");
 
             // Shockwave N
@@ -284,11 +284,11 @@ export default function Manifesto() {
                 {/* UNIFIED VISION CONTAINER */}
                 <div className="vision-slots" style={{
                     display: 'flex', gap: '0.5vw', alignItems: 'center', position: 'absolute',
-                    transformStyle: 'preserve-3d', perspective: '1000px', zIndex: 5
+                    transform: 'translateY(-5vh)', transformStyle: 'preserve-3d', perspective: '1000px', zIndex: 5
                 }}>
                     {visionItems.map((item, i) => (
                         <div key={i} className="slot" style={{
-                            position: 'relative', width: '12vw', height: '15vw',
+                            position: 'relative', width: 'min(12vw, 160px)', height: 'min(15vw, 200px)',
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
                             transformStyle: 'preserve-3d'
                         }}>
@@ -309,7 +309,7 @@ export default function Manifesto() {
 
                             {/* Letter */}
                             <span ref={el => lettersRef.current[i] = el} style={{
-                                position: 'absolute', fontFamily: 'var(--font-heading)', fontSize: '15vw', fontWeight: '900',
+                                position: 'absolute', fontFamily: 'var(--font-heading)', fontSize: 'min(15vw, 200px)', fontWeight: '900',
                                 lineHeight: '100%', zIndex: 3, display: 'block', textAlign: 'center', backfaceVisibility: 'hidden',
                                 color: 'transparent', WebkitTextStroke: '2px black'
                             }}>
@@ -322,8 +322,9 @@ export default function Manifesto() {
                 {/* MARQUEE */}
                 {acronymData.map((item, i) => (
                     <div key={i} ref={el => wordsRef.current[i] = el} style={{
-                        position: 'absolute', fontFamily: 'var(--font-heading)', fontSize: '12vw', fontWeight: '800',
-                        color: 'transparent', WebkitTextStroke: '1.5px black', opacity: 0, textAlign: 'center', whiteSpace: 'nowrap', zIndex: 10
+                        position: 'absolute', fontFamily: 'var(--font-heading)', fontSize: 'clamp(2rem, 12vw, 180px)', fontWeight: '800',
+                        color: 'transparent', WebkitTextStroke: '1.5px black', opacity: 0, textAlign: 'center', whiteSpace: 'nowrap', zIndex: 10,
+                        transform: 'translateY(-5vh)'
                     }}>
                         {item.letters.map((char, j) => (
                             <span key={j} className="word-letter" style={{ display: 'inline-block' }}>{char}</span>
@@ -335,7 +336,8 @@ export default function Manifesto() {
                 <div ref={whyDiyaContainerRef} className="why-diya-reveal" style={{
                     position: 'absolute', width: '100%', height: '100%', top: 0, left: 0,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '2vw',
-                    opacity: 0, visibility: 'hidden', zIndex: 15, perspective: '1000px'
+                    opacity: 0, visibility: 'hidden', zIndex: 15, perspective: '1000px',
+                    transform: 'translateY(-5vh)'
                 }}>
                     <div ref={el => shapeRefs.current[0] = el} style={{ position: 'absolute', top: '30%', left: '15%', width: '5vw' }}>
                         <Icons.GsapFlower />

@@ -48,9 +48,10 @@ export default function BrandStatement() {
                 duration: 1,
                 stagger: 0.02,
                 ease: "back.out(1.5)", // Snappy settling
+                force3D: true, // Ensure hardware acceleration for mobile
                 scrollTrigger: {
                     trigger: sectionRef.current,
-                    start: "top 75%",
+                    start: "top 85%", // Earlier trigger for mobile
                     toggleActions: "play none none reverse"
                 }
             });
@@ -166,6 +167,13 @@ export default function BrandStatement() {
         pointerEvents: 'none'
     };
 
+    const isMobile = window.innerWidth < 480;
+
+    // Mobile-optimized badge positions
+    const smartPos = isMobile ? { top: '5%', right: '5%', transform: 'rotate(-3deg) scale(0.8)' } : { top: '15%', right: '10%', transform: 'rotate(-6deg)' };
+    const fastPos = isMobile ? { top: '35%', right: '-5%', transform: 'rotate(2deg) scale(0.8)' } : { top: '50%', right: '5%', transform: 'rotate(4deg)' };
+    const easyPos = isMobile ? { bottom: '5%', left: '0%', transform: 'rotate(-2deg) scale(0.8)' } : { bottom: '20%', left: '5%', transform: 'rotate(-3deg)' };
+
     return (
         <section
             ref={sectionRef}
@@ -175,19 +183,19 @@ export default function BrandStatement() {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'flex-start',
-                padding: '2rem 8vw 4rem 8vw',
+                padding: isMobile ? '4rem 5vw' : '2rem 8vw 4rem 8vw', // Reduced padding on mobile
                 background: 'transparent',
                 position: 'relative' // For absolute badges
             }}
         >
             {/* Badges */}
-            <div ref={smartBadgeRef} style={{ ...badgeStyle, top: '15%', right: '10%', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', transform: 'rotate(-6deg)' }}>
+            <div ref={smartBadgeRef} style={{ ...badgeStyle, ...smartPos, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
                 Smart 🧠
             </div>
-            <div ref={fastBadgeRef} style={{ ...badgeStyle, top: '50%', right: '5%', background: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)', transform: 'rotate(4deg)' }}>
+            <div ref={fastBadgeRef} style={{ ...badgeStyle, ...fastPos, background: 'linear-gradient(135deg, #0ba360 0%, #3cba92 100%)' }}>
                 Fast ⚡
             </div>
-            <div ref={easyBadgeRef} style={{ ...badgeStyle, bottom: '20%', left: '5%', background: 'linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%)', transform: 'rotate(-3deg)' }}>
+            <div ref={easyBadgeRef} style={{ ...badgeStyle, ...easyPos, background: 'linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%)' }}>
                 Easy 😌
             </div>
 
@@ -314,6 +322,6 @@ export default function BrandStatement() {
                     <span className="statement-word" style={{ display: 'inline-block', color: '#00c237', fontWeight: '700', transformOrigin: 'bottom center' }}>output.</span>
                 </span>
             </p>
-        </section>
+        </section >
     );
 }

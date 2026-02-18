@@ -403,6 +403,117 @@
     background: #00c237;
 }
 
+/* Strategic Input Section */
+.strategic-input-section {
+    width: 100%;
+    margin-top: 1rem;
+    align-items: flex-start;
+    /* Align left */
+    max-width: 800px;
+    /* Constrain width for readability */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.section-header-group {
+    margin-bottom: 2rem;
+    text-align: center;
+    width: 100%;
+}
+
+.section-subtext {
+    font-size: 1rem;
+    color: #666;
+    margin-top: 0.5rem;
+    line-height: 1.5;
+}
+
+.signal-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    width: 100%;
+}
+
+.signal-chip {
+    padding: 0.75rem 1.25rem;
+    border-radius: 100px;
+    border: 1px solid #e1e1e1;
+    background: #fff;
+    color: #444;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.signal-chip:hover {
+    border-color: #00c237;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.signal-chip.active {
+    background: #f0fff4;
+    border-color: #00c237;
+    color: #008f28;
+    box-shadow: 0 4px 12px rgba(0, 194, 55, 0.15);
+    font-weight: 600;
+}
+
+.freeform-input-container {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.freeform-input-container:focus-within {
+    border-color: #00c237;
+    box-shadow: 0 8px 30px rgba(0, 194, 55, 0.1);
+}
+
+.freeform-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #111;
+    margin-bottom: 0.75rem;
+}
+
+.freeform-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 1rem;
+    color: #333;
+    background: transparent;
+    line-height: 1.5;
+    min-height: 3em;
+}
+
+.freeform-textarea::placeholder {
+    color: #999;
+}
+
+.char-count {
+    text-align: right;
+    font-size: 0.75rem;
+    color: #aaa;
+    margin-top: 0.5rem;
+    font-weight: 500;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .platform-grid {

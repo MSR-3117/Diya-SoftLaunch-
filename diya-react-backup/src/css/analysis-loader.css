@@ -1,0 +1,27 @@
+/* Analysis Loader Styles (Clean & Minimal) */
+.analysis-page {
+    height: 100vh;
+    width: 100vw;
+    background-color: #f9f9f9;
+    color: #111;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-status-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: #666;
+    text-align: center;
+    min-height: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    letter-spacing: 0.02em;
+}

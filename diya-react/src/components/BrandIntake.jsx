@@ -1,10 +1,12 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
-import SystemNav from './SystemNav';
+import AppHeader from './ui/AppHeader';
+import ActionDock from './ui/ActionDock';
+import SocialBurstButton from './SocialBurstButton'; // Ensure this is imported directly now
 import SystemInput from './SystemInput';
 import ManualCard from './ManualCard';
-import ControlDock from './ControlDock';
+// ControlDock removed
 import FloatingShapes from './FloatingShapes';
 import HandwrittenDecor from './HandwrittenDecor';
 import MouseSpotlight from './MouseSpotlight';
@@ -41,7 +43,7 @@ export default function BrandIntake() {
                 .to(subRef.current, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, "-=0.6")
                 .to(inputWrapperRef.current, { scaleX: 1, opacity: 1, duration: 0.8, ease: "elastic.out(1, 0.75)" }, "-=0.6")
                 .to(manualRef.current, { y: 0, opacity: 1, duration: 0.8, ease: "power3.out" }, "-=0.6")
-                .to(dockRef.current, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.7)" }, "-=0.4");
+                .to(dockRef.current, { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.7)", clearProps: 'transform' }, "-=0.4");
 
             // --- DECOR EXPLOSION (After Scramble) ---
             // Scramble takes 3.5s. We start this at 3.0s to overlap slightly.
@@ -83,15 +85,19 @@ export default function BrandIntake() {
         return () => ctx.revert();
     }, []);
 
+    // --- Validation Handler ---
+    const [urlInput, setUrlInput] = useState('');
+
     const handleValidation = (isValid, val) => {
         setCanProceed(isValid);
+        setUrlInput(val);
     };
 
     const handleNext = () => {
         // Exit Animation
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({
-                onComplete: () => navigate('/brand-analysis')
+                onComplete: () => navigate('/brand-analysis', { state: { url: urlInput } }) // Pass URL
             });
             tl.to(".system-stage > *", { opacity: 0, scale: 0.95, duration: 0.4, stagger: 0.05, ease: "power2.in" });
         }, containerRef);
@@ -103,12 +109,12 @@ export default function BrandIntake() {
             <MouseSpotlight />
             <FloatingShapes />
 
-            <SystemNav />
+            <AppHeader />
 
             <HandwrittenDecor />
 
-            <main className="system-stage" style={{ position: 'relative', zIndex: 10 }}>
-                <h1 className="system-headline" ref={headlineRef} style={{ fontSize: '6.5rem', lineHeight: '0.9', cursor: 'default', letterSpacing: '-0.04em', display: 'flex', flexDirection: 'column', alignItems: 'center', textTransform: 'uppercase', fontWeight: 800, position: 'relative' }}>
+            <main className="system-stage" style={{ position: 'relative', zIndex: 10, paddingTop: '120px', paddingBottom: '120px' }}>
+                <h1 className="system-headline" ref={headlineRef} style={{ fontSize: '6.5rem', lineHeight: '0.85', cursor: 'default', letterSpacing: '-0.04em', display: 'flex', flexDirection: 'column', alignItems: 'center', textTransform: 'uppercase', fontWeight: 800, position: 'relative' }}>
                     <TextDecorations />
                     <span style={{ color: '#111', display: 'block' }}>
                         Import Your
@@ -122,7 +128,7 @@ export default function BrandIntake() {
                         Brand <ScrambleText text="Identity." duration={5.5} style={{ display: 'inline' }} />
                     </span>
                 </h1>
-                <p className="system-subhead" ref={subRef} style={{ fontSize: '1.2rem', color: '#666', marginBottom: '3rem' }}>
+                <p className="system-subhead" ref={subRef} style={{ fontSize: '1.2rem', color: '#666', marginBottom: '2rem' }}>
                     Enter your website URL to auto-detect assets.
                 </p>
 
@@ -140,11 +146,16 @@ export default function BrandIntake() {
             </main>
 
             <div ref={dockRef} style={{ width: '100%' }}>
-                <ControlDock
-                    canProceed={canProceed}
-                    onNext={handleNext}
+                <ActionDock
                     onBack={() => navigate('/')}
-                />
+                    backLabel="Return Home"
+                >
+                    <SocialBurstButton
+                        onClick={handleNext}
+                        disabled={!canProceed}
+                        style={{ opacity: canProceed ? 1 : 0.5, pointerEvents: canProceed ? 'auto' : 'none' }}
+                    />
+                </ActionDock>
             </div>
         </div>
     );

@@ -31,13 +31,15 @@ export default function Hero() {
     const shapesData = useRef([]); // Physics state
     const [shapes, setShapes] = useState([]);
 
-    // Generate Shapes on Mount
+    // Generate Shapes on Mount - dynamic count based on viewport
     useEffect(() => {
-        const newShapes = Array.from({ length: 60 }).map((_, i) => ({
+        const vw = window.innerWidth;
+        const shapeCount = vw < 480 ? 15 : vw < 768 ? 25 : vw < 1024 ? 40 : 60;
+        const newShapes = Array.from({ length: shapeCount }).map((_, i) => ({
             id: i,
             type: Math.floor(Math.random() * 6),
             color: COLORS[Math.floor(Math.random() * COLORS.length)],
-            size: Math.random() * 40 + 10,
+            size: Math.random() * (vw < 480 ? 25 : 40) + 10,
             x: Math.random() * window.innerWidth,
             y: Math.random() * window.innerHeight,
             rotation: Math.random() * 360,
@@ -76,7 +78,12 @@ export default function Hero() {
                 .to(".shape", {
                     duration: 2,
                     x: (i) => gsap.utils.random(-100, window.innerWidth + 100),
-                    y: (i) => gsap.utils.random(window.innerHeight * 0.1, window.innerHeight * 0.6), // Constrained Band: 10% to 60% down
+                    y: (i) => {
+                        const isMobile = window.innerWidth < 480;
+                        const min = isMobile ? window.innerHeight * 0.1 : window.innerHeight * 0.1;
+                        const max = isMobile ? window.innerHeight * 0.4 : window.innerHeight * 0.6; // Keep mobile shapes higher
+                        return gsap.utils.random(min, max);
+                    },
                     rotation: "random(-180, 180)",
                     ease: "elastic.out(1, 0.3)",
                     stagger: { amount: 0.2, from: "center" },
@@ -139,9 +146,12 @@ export default function Hero() {
                 if (!el) return;
                 const data = shapesData.current[i];
 
-                // Float
-                const floatX = Math.sin(time * data.floatSpeed + data.floatOffset) * 20;
-                const floatY = Math.cos(time * data.floatSpeed + data.floatOffset) * 20;
+                // Float with reduced movement on mobile
+                const isMobile = window.innerWidth < 480;
+                const floatScale = isMobile ? 10 : 20;
+
+                const floatX = Math.sin(time * data.floatSpeed + data.floatOffset) * floatScale;
+                const floatY = Math.cos(time * data.floatSpeed + data.floatOffset) * floatScale;
 
                 // Repulsion
                 const currentAbsX = data.originX + data.px + floatX;

@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import '../css/content-direction.css';
-import ModernButton from './ui/ModernButton';
-import SystemNav from './SystemNav';
+import AppHeader from './ui/AppHeader';
+import ActionDock from './ui/ActionDock';
 import AbstractBackground from './AbstractBackground';
 import HandwrittenDecor from './HandwrittenDecor';
-import { useBrand } from '../context/BrandContext';
 
 // Register Layout Plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -29,10 +28,11 @@ const PLATFORMS = [
 
 export default function ContentDirection() {
     const navigate = useNavigate();
-    const { setContentSettings } = useBrand();
     const [selectedPlatforms, setSelectedPlatforms] = useState([]);
     const [freqMode, setFreqMode] = useState('week'); // 'week' | 'month'
     const [freqValue, setFreqValue] = useState(3);
+    const [selectedSignals, setSelectedSignals] = useState([]);
+    const [freeformInput, setFreeformInput] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
 
     // Refs for animations
@@ -45,6 +45,13 @@ export default function ContentDirection() {
     const togglePlatform = (id) => {
         setSelectedPlatforms(prev =>
             prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
+        );
+    };
+
+    // Toggle Signal
+    const toggleSignal = (signal) => {
+        setSelectedSignals(prev =>
+            prev.includes(signal) ? prev.filter(s => s !== signal) : [...prev, signal]
         );
     };
 
@@ -162,13 +169,16 @@ export default function ContentDirection() {
             })
             // 6. Navigate
             .call(() => {
-                // Save settings to context before navigation
-                setContentSettings({
-                    platforms: selectedPlatforms,
-                    frequency: `${freqValue}/${freqMode}`
-                });
+                // Save state if needed (context/redux)
                 console.log("Plan:", { platforms: selectedPlatforms, freq: `${freqValue}/${freqMode}` });
-                navigate('/generating-plan');
+                navigate('/generating-plan', {
+                    state: {
+                        platforms: selectedPlatforms,
+                        frequency: `${freqValue}/${freqMode}`,
+                        signals: selectedSignals,
+                        notes: freeformInput
+                    }
+                });
             });
     };
 
@@ -218,6 +228,10 @@ export default function ContentDirection() {
                     "-=0.4"
                 );
 
+            // Animate AppHeader
+            gsap.set('.app-header', { y: -20, opacity: 0 });
+            gsap.to('.app-header', { y: 0, opacity: 1, duration: 0.8, delay: 1, ease: "power2.out" });
+
             // 4. Subtext Cinematic Blur Entry
             gsap.from(".sub-char", {
                 opacity: 0,
@@ -234,7 +248,7 @@ export default function ContentDirection() {
             });
 
             // 5. Scroll Animations
-            const sections = gsap.utils.toArray('.direction-section, .delegation-section');
+            const sections = gsap.utils.toArray('.direction-section, .strategic-input-section');
             sections.forEach((section, i) => {
                 gsap.from(section, {
                     scrollTrigger: {
@@ -257,6 +271,12 @@ export default function ContentDirection() {
     // Helper text
     const subText = "Set the direction once. DIYA handles the rest.";
 
+    const STRATEGIC_SIGNALS = [
+        "Hiring announcements", "Upcoming events", "Product updates",
+        "Customer stories", "Educational content", "Founder insights",
+        "Promotions", "Industry news"
+    ];
+
     // Mask Wrapper Helper (Main Header)
     const WrappedWord = ({ children }) => (
         <span style={{
@@ -271,7 +291,7 @@ export default function ContentDirection() {
     );
 
     return (
-        <div className="direction-page" ref={containerRef}>
+        <div className="direction-page" ref={containerRef} style={{ paddingBottom: '120px' }}>
             {/* ATMOSPHERE LAYERS */}
             <div className="atmosphere-background"></div>
             <div className="noise-overlay"></div>
@@ -283,7 +303,7 @@ export default function ContentDirection() {
             <HandwrittenDecor />
 
             {/* Navigation */}
-            <SystemNav step={2} totalSteps={3} onBack={() => navigate('/brand-persona')} />
+            <AppHeader />
 
             {/* Header */}
             <header className="direction-header">
@@ -416,12 +436,46 @@ export default function ContentDirection() {
                     </div>
                 </section>
 
-                {/* 3. CTA Section */}
-                <section className="delegation-section">
-                    <ModernButton onClick={handleDelegate}>
-                        Let DIYA plan the content
-                    </ModernButton>
+                {/* 3. Strategic Input Section */}
+                <section className="direction-section strategic-input-section">
+                    <div className="section-header-group">
+                        <h2 className="section-title">Anything specific you’d like to include?</h2>
+                        <p className="section-subtext">Share important themes, announcements, or priorities. DIYA will build around them.</p>
+                    </div>
+
+                    <div className="signal-chips-container">
+                        {STRATEGIC_SIGNALS.map(signal => (
+                            <button
+                                key={signal}
+                                className={`signal-chip ${selectedSignals.includes(signal) ? 'active' : ''}`}
+                                onClick={() => toggleSignal(signal)}
+                            >
+                                {signal}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="freeform-input-container">
+                        <label className="freeform-label">Add anything else (optional)</label>
+                        <textarea
+                            className="freeform-textarea"
+                            placeholder="e.g. Launching a new feature mid-month, hiring 2 developers, attending a conference…"
+                            value={freeformInput}
+                            onChange={(e) => setFreeformInput(e.target.value.slice(0, 250))}
+                            rows={2}
+                        />
+                        <div className="char-count">{freeformInput.length}/250</div>
+                    </div>
                 </section>
+
+                {/* Action Dock */}
+                <ActionDock
+                    onBack={() => navigate('/brand-persona')}
+                    backLabel="Back to Persona"
+                    onNext={handleDelegate}
+                    nextLabel="Generate Calendar"
+                />
+
             </main>
 
             {/* Planning Loader (Hidden until triggered) */}

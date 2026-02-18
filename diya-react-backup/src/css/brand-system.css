@@ -1,0 +1,296 @@
+/* Brand Intake System Styles */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(0, 0, 0, 0.05);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+    --system-font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --accent-green: #00c237;
+}
+
+.brand-system-page {
+    height: 100vh;
+    width: 100vw;
+    background-color: #fcfcfc;
+    color: #111;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: var(--system-font);
+    position: relative;
+    /* Subtle Grid Background */
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+
+/* --- Top Navigation --- */
+.system-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+}
+
+.nav-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+}
+
+.nav-close:hover {
+    background: #fff;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.nav-progress {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    letter-spacing: 0.5px;
+}
+
+/* --- Center Stage --- */
+.system-stage {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    position: relative;
+    padding: 0 2rem;
+}
+
+.system-headline {
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    text-align: center;
+    margin-bottom: 3rem;
+    line-height: 1.1;
+    color: #111;
+}
+
+/* --- System Input --- */
+.system-input-wrapper {
+    position: relative;
+    /* z-index handled by parent container in JSX to avoid stacking context traps */
+    width: 100%;
+    max-width: 700px;
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.system-input-wrapper:focus-within {
+    transform: scale(1.02);
+    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.08);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+.input-icon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    color: #888;
+}
+
+.system-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1.5rem;
+    padding: 0.8rem;
+    color: #111;
+    font-weight: 500;
+    outline: none;
+    font-family: inherit;
+}
+
+.system-input::placeholder {
+    color: #ccc;
+}
+
+
+
+/* --- Manual Card --- */
+.manual-card {
+    margin-top: 3rem;
+    width: 100%;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-decoration: none;
+    color: inherit;
+}
+
+.manual-card:hover {
+    transform: translateY(-5px) scale(1.02);
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+    border-color: var(--accent-green);
+}
+
+.manual-content h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+}
+
+.manual-content p {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.manual-icon {
+    width: 32px;
+    height: 32px;
+    background: #f0f0f0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s;
+}
+
+.manual-card:hover .manual-icon {
+    background: var(--accent-green);
+    color: white;
+}
+
+/* --- Control Dock --- */
+.control-dock {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    z-index: 100;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 50px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.dock-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: #f5f5f5;
+    color: #888;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dock-btn:hover:not(:disabled) {
+    background: #e5e5e5;
+    color: #111;
+}
+
+.dock-btn.primary {
+    background: #111;
+    color: white;
+    width: auto;
+    padding: 0 2rem;
+    font-weight: 600;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.dock-btn.primary.active {
+    background: var(--accent-green);
+    color: black;
+    opacity: 1;
+    pointer-events: all;
+    box-shadow: 0 4px 15px rgba(0, 194, 55, 0.4);
+}
+
+.dock-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 194, 55, 0.5);
+}
+
+/* --- Premium Animations --- */
+@keyframes gradientFlow {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+.input-aurora {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 105%;
+    height: 120%;
+    background: linear-gradient(90deg, #00c237, #00ff88, #00c237);
+    filter: blur(40px);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    z-index: -1;
+    border-radius: 50px;
+}
+
+.system-input-wrapper:focus-within .input-aurora {
+    opacity: 0.15;
+    animation: auroraPulse 3s infinite alternate;
+}
+
+@keyframes auroraPulse {
+    0% {
+        opacity: 0.15;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    100% {
+        opacity: 0.25;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+}

@@ -1,12 +1,10 @@
 import React, { useRef, useState } from 'react';
 import gsap from 'gsap';
-import { useBrand } from '../context/BrandContext';
 
 export default function SystemInput({ onValidationChange, onFocusChange }) {
     const [value, setValue] = useState('');
     const inputRef = useRef(null);
     const iconRef = useRef(null);
-    const { setUrl } = useBrand();
 
     const handleChange = (e) => {
         const val = e.target.value;
@@ -16,9 +14,7 @@ export default function SystemInput({ onValidationChange, onFocusChange }) {
         const isValid = val.length > 3 && val.includes('.');
         onValidationChange(isValid, val);
 
-        // Store URL in context when valid
         if (isValid) {
-            setUrl(val);
             gsap.to(iconRef.current, { rotation: 360, duration: 0.5, ease: 'back.out(1.7)' });
         }
     };

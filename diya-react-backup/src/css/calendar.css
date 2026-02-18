@@ -1,0 +1,1074 @@
+/* ===================================
+   Brand Calendar Styles - Light Theme
+   =================================== */
+
+/* Container - Dark background for sidebar reveal */
+.calendar-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, rgba(20, 20, 25, 1), rgba(15, 15, 20, 1));
+    color: #1a1a1a;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    overflow-x: hidden;
+}
+
+.calendar-page.blurred .calendar-content {
+    filter: blur(12px);
+    pointer-events: none;
+    transition: filter 0.4s ease;
+}
+
+.calendar-content {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem 3rem;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0;
+}
+
+/* Sheet effect when sidebar is open */
+.calendar-page.sidebar-open .calendar-content {
+    margin-left: 340px;
+    border-top-left-radius: 40px;
+    border-bottom-left-radius: 40px;
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Header */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.calendar-title {
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: #1a1a1a;
+}
+
+.calendar-title span {
+    color: #00c237;
+}
+
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.calendar-view-toggle {
+    display: flex;
+    background: #fff;
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.view-toggle-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.view-toggle-btn.active {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.view-toggle-btn:hover:not(.active) {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.calendar-nav-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+}
+
+.calendar-nav-btn:hover {
+    background: #f0f0f0;
+    border-color: #00c237;
+}
+
+.today-btn {
+    padding: 10px 20px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.today-btn:hover {
+    background: #00c237;
+    color: #fff;
+    border-color: #00c237;
+}
+
+/* Week Header */
+.week-header {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    gap: 12px;
+    margin-bottom: 1rem;
+}
+
+.week-header-spacer {
+    /* Empty space for time column */
+}
+
+.week-day-header {
+    background: #fff;
+    border-radius: 16px;
+    padding: 1rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+
+.week-day-header.today {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.week-day-name {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #888;
+    text-transform: capitalize;
+    margin-bottom: 4px;
+}
+
+.week-day-header.today .week-day-name {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.week-day-number {
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+/* Week Grid */
+.week-grid {
+    display: grid;
+    grid-template-columns: 60px repeat(7, 1fr);
+    gap: 12px;
+}
+
+.time-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.time-slot-label {
+    height: 100px;
+    display: flex;
+    align-items: flex-start;
+    padding-top: 0.5rem;
+    font-size: 0.75rem;
+    color: #999;
+    font-weight: 500;
+}
+
+.day-column {
+    position: relative;
+    min-height: 800px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 16px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Post Card - Colorful Pastel Cards */
+.post-card {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    border-radius: 16px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.post-card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Pastel Color Variants */
+.post-card.pink {
+    background: linear-gradient(145deg, #fce4ec, #f8bbd9);
+    border: 1px solid rgba(236, 64, 122, 0.2);
+}
+
+.post-card.yellow {
+    background: linear-gradient(145deg, #fff8e1, #ffe082);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+}
+
+.post-card.blue {
+    background: linear-gradient(145deg, #e3f2fd, #90caf9);
+    border: 1px solid rgba(33, 150, 243, 0.2);
+}
+
+.post-card.purple {
+    background: linear-gradient(145deg, #ede7f6, #b39ddb);
+    border: 1px solid rgba(103, 58, 183, 0.2);
+}
+
+.post-card.green {
+    background: linear-gradient(145deg, #e8f5e9, #a5d6a7);
+    border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.post-card.mint {
+    background: linear-gradient(145deg, #e0f7fa, #80deea);
+    border: 1px solid rgba(0, 188, 212, 0.2);
+}
+
+.post-card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 4px;
+}
+
+.post-card-time {
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 8px;
+}
+
+.post-card-image {
+    width: 100%;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.post-card-platform {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(4px);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Spotlight Overlay - Light Theme */
+.spotlight-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+}
+
+.spotlight-overlay.active {
+    pointer-events: auto;
+    opacity: 1;
+}
+
+.spotlight-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+}
+
+.spotlight-content {
+    position: relative;
+    z-index: 1;
+    width: 450px;
+    max-height: 90vh;
+    border-radius: 24px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 32px 64px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 194, 55, 0.1);
+}
+
+.spotlight-image {
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+}
+
+.spotlight-info {
+    padding: 1.5rem;
+}
+
+.spotlight-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+}
+
+.spotlight-detail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.spotlight-detail-icon {
+    width: 36px;
+    height: 36px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.spotlight-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.spotlight-tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.spotlight-tag.blue {
+    background: #e3f2fd;
+    color: #1976d2;
+    border: 1px solid rgba(25, 118, 210, 0.2);
+}
+
+.spotlight-tag.yellow {
+    background: #fff8e1;
+    color: #f57c00;
+    border: 1px solid rgba(245, 124, 0, 0.2);
+}
+
+.spotlight-tag.purple {
+    background: #ede7f6;
+    color: #7b1fa2;
+    border: 1px solid rgba(123, 31, 162, 0.2);
+}
+
+/* Caption Display */
+.spotlight-caption-section {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.spotlight-caption-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.spotlight-caption-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: #333;
+    max-height: 150px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.spotlight-caption-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.spotlight-caption-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.spotlight-caption-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+.spotlight-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.spotlight-action-btn {
+    flex: 1;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.spotlight-action-btn.primary {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+.spotlight-action-btn.primary:hover {
+    background: #333;
+    transform: translateY(-1px);
+}
+
+.spotlight-action-btn.secondary {
+    background: #f5f5f5;
+    color: #1a1a1a;
+}
+
+.spotlight-action-btn.secondary:hover {
+    background: #eee;
+}
+
+.spotlight-action-btn.more {
+    flex: 0;
+    width: 48px;
+    background: #f5f5f5;
+    color: #1a1a1a;
+}
+
+.spotlight-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    z-index: 10;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.spotlight-close:hover {
+    background: #fff;
+    transform: scale(1.1);
+}
+
+/* Calendar Icon Button */
+.calendar-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.calendar-icon-btn:hover {
+    background: #f5f5f5;
+}
+
+/* ==========================================
+   SIDEBAR STYLES - Dark Translucent Theme
+   ========================================== */
+
+.calendar-sidebar {
+    position: fixed;
+    left: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 320px;
+    background: linear-gradient(180deg, rgba(25, 25, 30, 0.98), rgba(20, 20, 25, 1));
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    z-index: 100;
+    transform: translateX(-110%);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    overflow-y: auto;
+    color: #fff;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+
+    /* Hide Scrollbar */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.calendar-sidebar::-webkit-scrollbar {
+    display: none;
+}
+
+.calendar-sidebar.open {
+    transform: translateX(0);
+}
+
+
+/* Burger Menu Button */
+.burger-menu-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.burger-menu-btn:hover {
+    background: #f0f0f0;
+    border-color: #00c237;
+}
+
+.burger-line {
+    width: 18px;
+    height: 2px;
+    background: #1a1a1a;
+    border-radius: 1px;
+    transition: all 0.2s ease;
+}
+
+.burger-menu-btn.active .burger-line:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+
+.burger-menu-btn.active .burger-line:nth-child(2) {
+    opacity: 0;
+}
+
+.burger-menu-btn.active .burger-line:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Sidebar Profile */
+.sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00c237, #00a030);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.profile-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.profile-role {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sidebar-calendar-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    font-size: 1.2rem;
+}
+
+.notification-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #00c237;
+    font-size: 0.65rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+
+/* Minimap Calendar */
+.sidebar-minimap {
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 16px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.minimap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.minimap-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+.minimap-nav {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.minimap-nav button {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.minimap-nav button:hover {
+    background: rgba(0, 194, 55, 0.3);
+}
+
+.minimap-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.minimap-weekday {
+    text-align: center;
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.4);
+    padding: 4px 0;
+    font-weight: 500;
+}
+
+.minimap-day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.minimap-day:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.minimap-day.other-month {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.minimap-day.today {
+    background: rgba(138, 100, 255, 0.4);
+    color: #fff;
+    font-weight: 600;
+}
+
+
+
+/* Sidebar Sections */
+.sidebar-section {
+    margin-bottom: 1.5rem;
+}
+
+.sidebar-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.section-toggle {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+/* Platform List */
+.platform-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.platform-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.platform-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.platform-item input {
+    display: none;
+}
+
+.platform-checkbox {
+    width: 20px;
+    height: 20px;
+    border-radius: 6px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.platform-item input:checked+.platform-checkbox {
+    background: #00c237;
+    border-color: #00c237;
+}
+
+.platform-item input:checked+.platform-checkbox::after {
+    content: '✓';
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.platform-icon {
+    font-size: 1rem;
+}
+
+.platform-name {
+    flex: 1;
+    font-size: 0.85rem;
+    color: #fff;
+}
+
+.platform-count {
+    background: rgba(0, 194, 55, 0.2);
+    color: #00c237;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Category List */
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.category-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.category-name {
+    font-size: 0.85rem;
+    min-width: 70px;
+}
+
+.category-bar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.category-progress {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Schedule Controls */
+.schedule-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.control-group label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.control-group select,
+.control-group input[type="time"] {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    font-size: 0.85rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.control-group select:focus,
+.control-group input[type="time"]:focus {
+    border-color: #00c237;
+    box-shadow: 0 0 0 3px rgba(0, 194, 55, 0.15);
+}
+
+.control-group select option {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* ==========================================
+   MONTH VIEW STYLES
+   ========================================== */
+
+.month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.month-weekday-header {
+    text-align: center;
+    padding: 1rem 0;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+}
+
+.month-day-cell {
+    min-height: 120px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 0.75rem;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+}
+
+.month-day-cell:hover {
+    border-color: #00c237;
+    box-shadow: 0 4px 12px rgba(0, 194, 55, 0.1);
+}
+
+.month-day-cell.other-month {
+    background: rgba(248, 249, 250, 0.5);
+    opacity: 0.5;
+}
+
+.month-day-cell.today {
+    border-color: #00c237;
+    background: rgba(0, 194, 55, 0.05);
+}
+
+.month-day-number {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.month-day-cell.today .month-day-number {
+    color: #00c237;
+}
+
+.month-post-pill {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.month-post-pill:hover {
+    transform: scale(1.02);
+}
+
+.month-post-pill.pink {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.month-post-pill.yellow {
+    background: #fff8e1;
+    color: #f57c00;
+}
+
+.month-post-pill.blue {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.month-post-pill.purple {
+    background: #ede7f6;
+    color: #7b1fa2;
+}
+
+.month-post-pill.green {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+/* ==========================================
+   DAY VIEW STYLES
+   ========================================== */
+
+.day-view-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.day-header-single {
+    text-align: center;
+    padding: 2rem 0;
+    margin-bottom: 1rem;
+}
+
+.day-header-single .day-name {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.day-header-single .day-date {
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.day-timeline {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 1rem;
+}
+
+.day-time-slot {
+    display: contents;
+}
+
+.day-time-label {
+    font-size: 0.85rem;
+    color: #999;
+    text-align: right;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+}
+
+.day-slot-content {
+    min-height: 80px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    padding: 0.5rem;
+    position: relative;
+}

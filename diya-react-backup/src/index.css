@@ -1,0 +1,925 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* @import "./css/navbar.css"; Removed to fix overlay */
+@import "./css/hero-shapes.css";
+@import "./css/button-3d.css";
+
+/* Reset & Base Styles */
+/* Navbar 3.0: Fluid Dock */
+.header-dock-wrapper {
+    position: fixed;
+    top: 1rem;
+    /* Moved up from 2rem */
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    z-index: 1000;
+    pointer-events: none;
+    /* Let clicks pass through outside the dock */
+}
+
+/* ... (skipping unchanged lines) ... */
+
+/* Hero Section */
+.hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* Align to top to use upper space */
+    /* Robust vertical centering removed in favor of top-loading */
+    position: relative;
+    padding-top: 12vh;
+    /* Adjusted to 12vh (approx 120px) to sit just below navbar */
+    padding-bottom: 0;
+    border-bottom: none !important;
+}
+
+/* Fix for nested section wrapper in App.jsx */
+#home {
+    padding: 0 !important;
+    border: none !important;
+}
+
+/* Fix for Manifesto wrapper gap */
+#vision {
+    padding-top: 8rem !important;
+    /* Balanced breathing room */
+    padding-bottom: 0 !important;
+    border: none !important;
+}
+
+.nav-dock {
+    pointer-events: auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0.5rem;
+    /* Tight padding used by the structured pill */
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 100px;
+    box-shadow:
+        0 20px 40px rgba(0, 0, 0, 0.05),
+        0 1px 2px rgba(0, 0, 0, 0.1),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+    transition: transform 0.3s ease;
+}
+
+/* The Liquid Tab (Animated Background) */
+/* The Liquid Tab (Animated Background) */
+.nav-dock-pill {
+    position: absolute;
+    top: 10%;
+    /* Center vertically (100% - 80%) / 2 */
+    left: 0;
+    width: 0;
+    /* JS handles width */
+    height: 80%;
+    background: var(--accent-color);
+    /* Green highlight */
+    border-radius: 100px;
+    z-index: 0;
+    pointer-events: none;
+    transition: width 0.3s ease, transform 0.3s ease;
+}
+
+.dock-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    /* Strict constraint */
+    width: 48px;
+    margin-left: 0.5rem;
+    z-index: 10;
+}
+
+.dock-logo img {
+    height: 100%;
+    width: auto;
+    object-fit: contain;
+    margin: 0;
+    transform: scale(1.1);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+
+.dock-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.dock-links {
+    display: flex;
+    gap: 0.25rem;
+    z-index: 1;
+}
+
+.dock-link {
+    display: block;
+    position: relative;
+    /* For z-index */
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+    border-radius: 100px;
+    transition: color 0.3s ease;
+    text-decoration: none;
+    z-index: 1;
+}
+
+/* Ensure text is readable on green pill */
+.dock-link.active,
+.dock-link:hover {
+    color: #fff !important;
+    /* Force white text when active/hovered */
+    mix-blend-mode: normal;
+}
+
+.dock-cta {
+    background: #1a1a1a;
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 0.25rem;
+    z-index: 1;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.dock-cta:hover {
+    transform: scale(1.05);
+    background: var(--accent-color);
+}
+
+:root {
+    --bg-color: #ffffff;
+    --text-color: #1a1a1a;
+    --accent-color: #00c237;
+    /* Slightly darker green for contrast */
+    --accent-secondary: #9d95ff;
+    --surface-color: #f8f9fa;
+    --border-color: #e5e5e5;
+
+    --font-heading: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+
+    --container-width: 1400px;
+    --gutter: 2rem;
+}
+
+*,
+*::before,
+*::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html.lenis {
+    height: auto;
+}
+
+.lenis.lenis-smooth {
+    scroll-behavior: auto;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+    overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+    overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+    pointer-events: none;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+    position: relative;
+}
+
+/* Ambient Background Container (Fixed & Full Screen) */
+.ambient-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    pointer-events: none;
+    opacity: 0;
+    /* Handled by GSAP */
+}
+
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    /* Vibrant Blur */
+    opacity: 0.15;
+    /* Increased visibility for Aurora effect */
+    animation: drift 20s infinite alternate ease-in-out;
+    mix-blend-mode: multiply;
+    /* Blends nicely on white */
+}
+
+/* Orb 1: Royal Blue (Top Left) */
+.orb-1 {
+    width: 60vw;
+    height: 60vw;
+    background: #4169e1;
+    top: -10%;
+    left: -10%;
+}
+
+/* Orb 2: Deep Purple (Bottom Right) */
+.orb-2 {
+    width: 70vw;
+    height: 70vw;
+    background: #8a2be2;
+    bottom: -15%;
+    right: -15%;
+    animation-delay: -5s;
+}
+
+/* Orb 3: Brand Green (Center Floating) */
+.orb-3 {
+    width: 50vw;
+    height: 50vw;
+    background: #00c237;
+    top: 20%;
+    left: 20%;
+    animation-delay: -10s;
+    opacity: 0.1;
+}
+
+@keyframes drift {
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    100% {
+        transform: translate(30px, 40px) scale(1.1);
+    }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: var(--font-heading);
+    color: var(--text-color);
+    line-height: 1.1;
+    font-weight: 600;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+ul {
+    list-style: none;
+}
+
+/* Utilities */
+.container {
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 0 var(--gutter);
+}
+
+.flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.text-accent {
+    color: var(--accent-color);
+}
+
+.btn {
+    display: inline-flex;
+    padding: 1rem 2rem;
+    border: 1px solid var(--accent-color);
+    border-radius: 100px;
+    color: var(--accent-color);
+    font-family: var(--font-heading);
+    font-weight: 600;
+    text-transform: uppercase;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+}
+
+.btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-color);
+    z-index: -1;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.btn:hover {
+    color: #fff;
+}
+
+.btn:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* Preloader */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-color);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--accent-color);
+    font-family: var(--font-heading);
+    font-size: 3rem;
+}
+
+
+
+/* Hero Section */
+
+
+.hero-content {
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.hero-title {
+    font-size: clamp(4rem, 16vw, 16rem);
+    /* Massive size to fill top space */
+    line-height: 0.85;
+    /* Tight leading */
+    margin-top: 0;
+    /* Reset margin */
+    margin-bottom: 1rem;
+    /* Reduced gap */
+    letter-spacing: -0.04em;
+    overflow: hidden;
+    /* For reveal animation */
+    color: var(--text-color);
+    padding: 0;
+    /* Removed 0.2em padding to fix top gap */
+}
+
+.hero-title span {
+    display: block;
+}
+
+/* Hero Subtitle Shimmer */
+.hero-subtitle {
+    font-size: 1.5rem;
+    /* Larger */
+    font-weight: 500;
+    /* Semi-bold */
+    margin-bottom: 1.5rem;
+    /* Reduced from 3rem */
+    color: var(--text-color);
+
+    /* Premium styling without background-clip artifacts */
+    background: none;
+    -webkit-background-clip: border-box;
+    background-clip: border-box;
+    -webkit-text-fill-color: initial;
+
+    color: var(--text-color);
+    opacity: 0.8;
+    animation: breathe 4s ease-in-out infinite alternate;
+
+    /* Flexbox for robust centering & spacing */
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35em;
+}
+
+@keyframes breathe {
+    0% {
+        color: var(--text-color);
+        opacity: 0.7;
+    }
+
+    100% {
+        color: var(--accent-color);
+        opacity: 0.9;
+    }
+}
+
+.hero-subtitle span {
+    display: inline-block;
+    will-change: transform, opacity;
+    background: transparent !important;
+    /* Force remove artifacts */
+    box-shadow: none !important;
+}
+
+/* Sections */
+section {
+    padding: 10rem 0;
+    border-bottom: none;
+    /* Removed global border */
+}
+
+/* About / Marquee */
+.about {
+    overflow: hidden;
+    background: transparent;
+    /* Allow ambient background */
+    padding: 4rem 0;
+    /* Reduced from default 10rem */
+}
+
+.marquee-container {
+    display: flex;
+    width: fit-content;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/* Intro Container: Center and Stack */
+/* Intro Container: Center and Stack */
+.manifesto-morph-container {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    width: 100%;
+    height: 100vh;
+    top: -20%;
+    /* Move VISION animation higher */
+}
+
+.morph-text-layer,
+.morph-icon-layer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1vw;
+    /* Consistent spacing */
+    position: absolute;
+    /* Overlap exactly */
+}
+
+.morph-letter {
+    font-family: var(--font-heading);
+    font-size: 15vw;
+    /* Massive */
+    font-weight: 800;
+    line-height: 1;
+    color: transparent;
+    -webkit-text-stroke: 4px var(--text-color);
+    width: 12vw;
+    /* Fixed width for alignment with icons */
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.morph-icon-wrapper {
+    width: 12vw;
+    /* Match letter width */
+    height: 12vw;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.morph-icon {
+    width: 100%;
+    height: 100%;
+    /* color: var(--accent-color); Removed to allow SVG brand colors */
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
+}
+
+
+
+.marquee-text {
+    font-family: var(--font-heading);
+    font-size: 10vw;
+    font-weight: 700;
+    color: transparent;
+    -webkit-text-stroke: 2px var(--text-color);
+    /* Dark black stroke */
+    display: flex;
+    /* Allow flex gap/margins */
+    padding-right: 0;
+    /* Remove block padding */
+    will-change: transform;
+}
+
+.marquee-word {
+    margin-right: 3rem;
+    /* Small cohesion spacing */
+}
+
+.marquee-word:last-child {
+    margin-right: 10rem;
+    /* Large loop gap */
+}
+
+.marquee-text .text-accent {
+    color: var(--accent-color);
+    -webkit-text-stroke: 0;
+    /* Solid green fill */
+}
+
+/* Features */
+/* Manifesto (Cinematic Scroll) */
+.manifesto-section {
+    height: 100vh;
+    background: var(--background-color);
+    /* Solid background to hide content behind */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    z-index: 10;
+}
+
+/* Vision Boundaries Removed for Text Transition */
+
+.manifesto-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.manifesto-word {
+    position: absolute;
+    font-family: var(--font-heading);
+    font-size: 12vw;
+    /* Reduced from 15vw to fit "INTELLIGENCE" */
+    font-weight: 700;
+    line-height: 1;
+    color: transparent;
+    /* Start as outline */
+    -webkit-text-stroke: 2px var(--text-color);
+    text-transform: uppercase;
+    white-space: nowrap;
+    will-change: transform, opacity, filter;
+    text-align: center;
+}
+
+/* Why DIYA Animation Section */
+.why-diya-section {
+    height: 400vh;
+    /* Scrolldistance */
+    position: relative;
+    background: transparent;
+    /* Allow ambient background */
+}
+
+.sticky-stage {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.section-title.pinned {
+    position: absolute;
+    top: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+    z-index: 10;
+}
+
+/* Three Zones - Removed for Full Screen Scatter */
+
+/* Mascot - COMMENTED: Collides with DiyaMascot component inline styles
+.diya-mascot {
+    position: absolute;
+    top: 50%;
+    left: 40%;
+    transform: translate(-50%, -50%) scale(0.5);
+    height: 80vh;
+    width: auto;
+    object-fit: contain;
+    z-index: 2;
+    opacity: 0;
+    will-change: transform, opacity;
+}
+*/
+
+/* Processing Unit */
+.processing-unit {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.diya-logo-center {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-color);
+    background: #fff;
+    padding: 2rem;
+    border-radius: 50%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    z-index: 5;
+    position: relative;
+    letter-spacing: -2px;
+}
+
+.logo-pulse {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--accent-color);
+    opacity: 0;
+    z-index: 1;
+    transform: scale(0.8);
+}
+
+/* Cards */
+.cards-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.automation-card {
+    position: absolute;
+    /* Initial centered/hidden state or set via JS */
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(5px);
+    border: 2px solid var(--accent-color);
+    /* Green Outline */
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    font-family: var(--font-body);
+    font-weight: 500;
+    white-space: nowrap;
+    will-change: transform, opacity;
+    color: var(--text-color);
+}
+
+.card-content {
+    font-size: 1.1rem;
+    color: inherit;
+}
+
+/* Navigation Logo */
+.nav-logo {
+    height: 60px;
+    /* Increased from 45px */
+    width: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 0 8px rgba(0, 194, 55, 0.4));
+    transition: filter 0.3s ease;
+}
+
+.nav-logo:hover {
+    filter: drop-shadow(0 0 12px rgba(0, 194, 55, 0.7));
+}
+
+/* CTA Button Polish */
+.cta-button {
+    padding: 0.8rem 1.8rem;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Why Diya Global Wrapper */
+.why-diya-section {
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    background: var(--background-color);
+    /* Solid background to cover manifesto section */
+    display: flex;
+    align-items: center;
+    /* No padding, full bleed */
+    z-index: 20;
+    /* Stack above manifesto */
+}
+
+/* Horizontal Track */
+.why-track {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    gap: 15vw;
+    /* Large gap separates cards cleanly */
+    will-change: transform;
+    padding-left: 0;
+    /* Spacer divs handle offset */
+}
+
+/* Glass Card (Spotlight) */
+.glass-panel {
+    width: 45vw;
+    /* Grand size */
+    max-width: 600px;
+    height: 65vh;
+    min-height: 500px;
+    flex-shrink: 0;
+
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    border: 2px solid blue;
+    /* DEBUG BORDER */
+
+    box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.04),
+        0 1px 0px rgba(255, 255, 255, 1) inset;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 3rem;
+    text-align: center;
+
+    position: relative;
+    overflow: hidden;
+    transform-origin: center center;
+}
+
+/* Typography & Content */
+.card-icon-large {
+    font-size: 6rem;
+    margin-bottom: 2rem;
+    filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.1));
+    /* floaty feel */
+    animation: floatIcon 6s ease-in-out infinite;
+}
+
+@keyframes floatIcon {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.card-title {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    color: var(--text-color);
+    letter-spacing: -1px;
+}
+
+.card-desc {
+    font-family: var(--font-body);
+    font-size: 1.35rem;
+    line-height: 1.6;
+    color: var(--text-color);
+    opacity: 0.75;
+    max-width: 90%;
+}
+
+/* Card Glow Effect */
+.card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.8) 0%, transparent 60%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
+    transition: opacity 0.5s ease;
+}
+
+.glass-panel:hover .card-glow {
+    opacity: 0.3;
+}
+
+
+/* Panel 3: Order */
+.order-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3rem;
+    margin-top: 3rem;
+}
+
+.grid-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    font-size: 2rem;
+    font-weight: 600;
+    padding: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+.grid-item .icon {
+    font-size: 3rem;
+}
+
+/* Footer */
+.footer {
+    padding: 5rem 0;
+    text-align: center;
+}
+
+.footer-link {
+    font-size: clamp(3rem, 10vw, 8rem);
+    font-family: var(--font-heading);
+    font-weight: 700;
+    color: var(--border-color);
+    transition: color 0.3s;
+    line-height: 1;
+    display: inline-block;
+}
+
+.footer-link:hover {
+    color: var(--accent-color);
+}
+
+/* Manifesto Section - No Padding for immediate scroll */
+.manifesto-section,
+#vision>section,
+#vision .manifesto-section {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Hero Section - Remove bottom padding to touch Vision */
+#home,
+#home>section,
+.hero {
+    padding-bottom: 0 !important;
+}

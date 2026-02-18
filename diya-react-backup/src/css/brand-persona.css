@@ -1,0 +1,802 @@
+/* Brand Persona Dashboard - Light Glass Bento Theme */
+:root {
+    --glass-bg: rgba(255, 255, 255, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.8);
+    --glass-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    --accent-green: #00c237;
+    --text-primary: #111;
+    --text-secondary: #666;
+}
+
+.persona-page {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #f9f9f9;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    padding: 2rem;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-x: hidden;
+    position: relative;
+    z-index: 100;
+    /* Ensure strictly above global ambient background */
+}
+
+/* Bento Grid Layout */
+.bento-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(3, minmax(180px, auto));
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    /* Removed perspective to prevent text blur */
+    position: relative;
+    z-index: 10;
+}
+
+/* Reusable Glass Card */
+.glass-card {
+    background: #ffffff;
+    /* Solid Opaque White */
+    border: 1px solid #dcdcdc;
+    /* Darker border for clarity */
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    /* Slightly darker shadow */
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    /* Init Hidden for Animation */
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    /* Subtle lift */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    /* Sharper shadow */
+    border-color: #00c237;
+    /* Minimal Green Outline */
+}
+
+/* Card Specifics */
+
+/* 1. Identity Hero (Span 2 cols, 2 rows) */
+.card-identity {
+    grid-column: span 2;
+    grid-row: span 2;
+    background: #ffffff;
+    /* No more foggy gradient */
+    justify-content: center;
+    align-items: flex-start;
+}
+
+/* 2. Color Palette (Span 2 cols, 1 row) */
+.card-colors {
+    grid-column: span 2;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+}
+
+/* 3. Typography (Span 1 col, 2 rows) */
+.card-typography {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+/* 4. Brand Voice (Span 1 col, 2 rows) */
+.card-voice {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+/* 5. Visual Style / Example (Span 2 cols, 1 row - Bottom) */
+.card-visual {
+    grid-column: span 2;
+    grid-row: span 1;
+}
+
+/* 6. Action / Export (Span 2 cols, 1 row - Bottom) */
+.card-actions {
+    grid-column: span 2;
+    grid-row: span 1;
+    background: #111;
+    /* Dark Contrast Card */
+    color: #fff;
+    align-items: center;
+    justify-content: center;
+}
+
+.card-actions:hover {
+    background: #000;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Content Styles */
+.card-title {
+    font-size: 3rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    margin-bottom: 0.8rem;
+    color: #000000 !important;
+    opacity: 1 !important;
+    background: none !important;
+    -webkit-background-clip: border-box !important;
+    background-clip: border-box !important;
+    -webkit-text-fill-color: initial !important;
+}
+
+.card-subtitle {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #333333 !important;
+    opacity: 1 !important;
+    line-height: 1.4;
+    max-width: 90%;
+}
+
+.card-label {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #444444 !important;
+    opacity: 1 !important;
+    margin-bottom: 1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Color Swatches */
+.swatch-container {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+}
+
+.color-swatch {
+    flex: 1;
+    height: 100px;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    position: relative;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.color-swatch:hover {
+    transform: scale(1.05) translateY(-5px);
+    z-index: 10;
+}
+
+/* Typography Preview */
+.type-preview {
+    font-size: 8rem;
+    line-height: 0.8;
+    font-weight: 800;
+    display: block;
+    margin: 1rem 0;
+    opacity: 0.1;
+    position: absolute;
+    bottom: -20px;
+    right: -20px;
+    pointer-events: none;
+}
+
+.font-name {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: auto;
+}
+
+/* Voice Tags */
+.voice-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+
+.voice-tag {
+    padding: 0.6rem 1.2rem;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 50px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .bento-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .card-identity {
+        grid-column: span 2;
+    }
+
+    .card-colors {
+        grid-column: span 2;
+    }
+
+    .card-typography {
+        grid-column: span 1;
+    }
+
+    .card-voice {
+        grid-column: span 1;
+    }
+
+    .card-visual {
+        grid-column: span 2;
+    }
+
+    .card-actions {
+        grid-column: span 2;
+    }
+
+    .bento-grid {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* Page Header */
+.persona-header {
+    text-align: center;
+    margin-bottom: 2rem;
+    margin-top: 3rem;
+    position: relative;
+    /* Anchor for annotations */
+    z-index: 20;
+    /* Space for SystemNav */
+}
+
+.persona-header h2 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    /* Tighten up */
+    margin-bottom: 0.5rem;
+    color: #111;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15em;
+    flex-wrap: wrap;
+}
+
+/* Optimization for animation jitter */
+.persona-header h2 .char {
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    opacity: 0;
+    /* Init Hidden */
+}
+
+/* The Cool Black Box */
+.brand-highlight-box {
+    display: inline-block;
+    background: #000;
+    color: #00c237;
+    padding: 0 0.3em;
+    transform: skewX(-10deg);
+    margin: 0 0.1em;
+    position: relative;
+    overflow: hidden;
+    /* For swipe reveal */
+    /* Init Hidden handled by GSAP setup but safer here too if needed, 
+       though scaleX:0 is usually enough. Let's start opacity 0 for safety */
+    opacity: 0;
+}
+
+.brand-highlight-box span {
+    display: inline-block;
+    transform: skewX(10deg);
+    /* Un-skew text */
+    font-weight: 900;
+    position: relative;
+    z-index: 2;
+    opacity: 0;
+}
+
+.header-meta {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 500;
+    opacity: 0;
+    /* Init Hidden */
+}
+
+.persona-page {
+    flex-direction: column;
+    /* Stack header and grid */
+    justify-content: flex-start;
+    /* Start from top */
+}
+
+/* Navigation Card (Fills gap) */
+.card-nav {
+    grid-column: span 2;
+    grid-row: span 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.nav-action-btn {
+    padding: 0.8rem 1.5rem;
+    background: #f1f1f1;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    align-self: flex-start;
+}
+
+.nav-action-btn:hover {
+    background: #e1e1e1;
+    transform: translateY(-2px);
+}
+
+/* --- Phase 14: Immersive Action Buttons --- */
+
+/* 1. Obsidian Slab (Download) */
+.obsidian-card {
+    grid-column: span 2;
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0;
+    /* Init hidden for GSAP */
+}
+
+.obsidian-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.obsidian-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    transition: left 0.5s;
+}
+
+.obsidian-card:hover::before {
+    left: 100%;
+}
+
+.obsidian-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.obsidian-icon {
+    font-size: 1.5rem;
+    color: #fff;
+    opacity: 0.8;
+}
+
+/* 2. Quantum Key (Next Steps - Hero CTA) */
+.quantum-card {
+    grid-column: span 2;
+    /* Takes full width of its section */
+    background: var(--accent-green);
+    border-radius: 20px;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 194, 55, 0.3);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0;
+    /* Init hidden for GSAP */
+}
+
+.quantum-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 60px rgba(0, 194, 55, 0.5);
+    background: #00d63e;
+    /* Slightly lighter green */
+}
+
+.quantum-text {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.quantum-arrow {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.quantum-card:hover .quantum-arrow {
+    transform: translateX(5px);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* --- Phase 16: Static "Smoke & Glass" Buttons --- */
+
+.action-dock {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+    position: relative;
+    z-index: 50;
+    width: 100%;
+}
+
+/* 1. Aurora Button (Primary CTA) - Electric Green Smoke Edition */
+.aurora-btn {
+    position: relative;
+    padding: 1.2rem 3.5rem;
+    border-radius: 100px;
+    background: #000;
+    /* Pure Black Base */
+    /* Thick Glass Rim */
+    border: 3px solid rgba(255, 255, 255, 0.6);
+    cursor: pointer;
+    overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94), border-color 0.3s ease;
+
+    /* The Glow Stack: Green & White */
+    box-shadow:
+        inset 0 0 20px rgba(255, 255, 255, 0.4),
+        /* Inner White Rim */
+        inset 0 0 50px rgba(0, 255, 71, 0.15),
+        /* Deep Green Fog */
+        0 10px 40px rgba(0, 0, 0, 0.8),
+        /* Drop Shadow */
+        0 0 0 1px rgba(0, 0, 0, 0.5);
+    /* Outer def */
+
+    /* Fixed Size */
+    min-width: 340px;
+    height: 72px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.aurora-btn:hover {
+    transform: scale(1.02);
+    border-color: #fff;
+    /* White Hot Rim */
+    box-shadow:
+        inset 0 0 30px rgba(255, 255, 255, 0.6),
+        inset 0 0 60px rgba(0, 255, 71, 0.3),
+        0 0 30px rgba(0, 255, 71, 0.4),
+        /* Outer Electric Glow */
+        0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.aurora-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+    overflow: hidden;
+    background: #000;
+}
+
+/* The Electric Smoke */
+.aurora-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(40px);
+    /* Maximum Diffusion */
+    mix-blend-mode: screen;
+    /* Light Addition */
+    opacity: 0.9;
+    will-change: transform;
+}
+
+/* All Green Variations */
+.orb-1 {
+    width: 70%;
+    height: 150%;
+    background: #00ff47;
+    /* Neon Green */
+    top: -30%;
+    left: -20%;
+    opacity: 0.7;
+}
+
+.orb-2 {
+    width: 90%;
+    height: 100%;
+    background: #008f29;
+    /* Darker Radioactive Green */
+    bottom: -40%;
+    right: -20%;
+    opacity: 0.8;
+}
+
+.orb-3 {
+    width: 60%;
+    height: 120%;
+    background: #ccff00;
+    /* Toxic Lime */
+    top: 10%;
+    right: 20%;
+    opacity: 0.5;
+}
+
+.orb-4 {
+    /* New detailed wisp */
+    width: 40%;
+    height: 40%;
+    background: #fff;
+    /* White Core Hotspot */
+    top: 30%;
+    left: 30%;
+    opacity: 0.3;
+    filter: blur(20px);
+}
+
+.aurora-glass {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    /* Hard Glass Reflection */
+    background: linear-gradient(180deg,
+            rgba(255, 255, 255, 0.4) 0%,
+            rgba(255, 255, 255, 0.1) 40%,
+            rgba(255, 255, 255, 0) 50%,
+            rgba(255, 255, 255, 0.1) 100%);
+    pointer-events: none;
+    border-radius: 100px;
+    box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.5);
+}
+
+.aurora-content {
+    position: relative;
+    z-index: 3;
+    color: #fff;
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* --- GSAP Button (Green Border Style) --- */
+.modern-btn {
+    position: relative;
+    padding: 0 4rem;
+    height: 64px;
+    border-radius: 100px;
+    background: #0e0e0e;
+    border: 2px solid #00ff47;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    overflow: visible;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+    min-width: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 0 0 rgba(0, 255, 71, 0);
+    z-index: 10;
+}
+
+.modern-btn:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 30px rgba(0, 255, 71, 0.4);
+}
+
+/* Text Wrapper */
+.modern-btn-text {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    height: auto;
+    pointer-events: none;
+    z-index: 2;
+    white-space: nowrap;
+}
+
+/* Individual Char Wrapper */
+.modern-btn-char-wrapper {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 1.3em;
+    line-height: 1.3em;
+}
+
+.modern-btn-char {
+    display: block;
+    transform: translateY(0);
+    color: #fff;
+}
+
+.modern-btn-char-clone {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    display: block;
+    color: #00ff47;
+    transform: translateY(0);
+}
+
+/* Particles */
+.modern-btn-particles {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.modern-btn-icon {
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    width: 24px;
+    height: 24px;
+    /* Color is set via inline style in JSX */
+    opacity: 0;
+    transform: scale(0);
+}
+
+.modern-btn-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(0, 255, 71, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.modern-btn:hover .modern-btn-glow {
+    width: 300px;
+    height: 300px;
+    opacity: 1;
+}
+
+@keyframes rotateSilver {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.gradient-btn:hover {
+    transform: scale(1.02);
+}
+
+.gradient-btn:hover::before {
+    animation-duration: 1.5s;
+    /* Speed up spin */
+    background: conic-gradient(from 0deg,
+            #ffffff 0deg,
+            #ffffff 60deg,
+            transparent 120deg,
+            transparent 360deg);
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.5));
+}
+
+/* 2. Crystal Button */
+.crystal-btn {
+    padding: 1.2rem 2.8rem;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    color: #111;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    height: 72px;
+    /* Match aurora height */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.crystal-btn:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+@media (max-width: 768px) {
+    .action-dock {
+        flex-direction: column-reverse;
+        /* Download below Next */
+        gap: 1.5rem;
+    }
+
+    .gradient-btn-wrapper,
+    .crystal-btn {
+        width: 100%;
+        min-width: unset;
+        height: 60px;
+        /* Smaller on mob */
+    }
+}

@@ -1,0 +1,427 @@
+/* Content Direction Page - Minimal, Delegation-First */
+.direction-page {
+    min-height: 100vh;
+    width: 100%;
+    background-color: #f9f9f9;
+    color: var(--text-primary, #111);
+    font-family: 'Inter', sans-serif;
+    padding: 2rem 2rem 3rem 2rem;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    /* overflow-x: hidden; REMOVED to prevent scroll locking */
+}
+
+/* --- ATMOSPHERE LAYERS --- */
+.atmosphere-background {
+    position: fixed;
+    bottom: -20vh;
+    right: -10vw;
+    width: 60vw;
+    height: 60vw;
+    background: radial-gradient(circle, rgba(0, 194, 55, 0.15) 0%, rgba(138, 43, 226, 0.1) 40%, transparent 70%);
+    filter: blur(80px);
+    z-index: 0;
+    pointer-events: none;
+    animation: floatBlob 20s infinite alternate ease-in-out;
+    opacity: 0.6;
+}
+
+.noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+    z-index: 1000;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+    opacity: 0.4;
+}
+
+@keyframes floatBlob {
+    0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-10%, -10%) scale(1.1) rotate(20deg);
+    }
+}
+
+/* Header */
+.direction-header {
+    text-align: center;
+    margin-top: 2rem;
+    margin-bottom: 0rem;
+    /* Collapsed */
+    max-width: 900px;
+    z-index: 10;
+}
+
+.direction-header h1 {
+    font-size: 4.5rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    margin-bottom: 1rem;
+    /* Increased from 0.5rem for breathing room */
+    color: #111;
+    text-transform: uppercase;
+    /* Massive & Editorial */
+}
+
+/* Sub-header */
+.direction-sub {
+    font-size: 1.25rem;
+    font-weight: 500;
+    color: #333;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+
+/* The SUPER COOL DIYA Box */
+.diya-super-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    /* Fix centering */
+    /* Fix for jitter: Align left so content doesn't dance */
+    background-color: #000;
+    /* Force Black */
+    color: #00c237;
+    /* Brand Green */
+    padding: 0 0.5em;
+    /* Balanced padding */
+    /* Animates from 0 */
+    margin: 0 0.2em;
+    transform: skewX(-10deg) translateZ(0);
+    /* Force GPU */
+    position: relative;
+    overflow: hidden;
+    vertical-align: middle;
+    /* Critical for flow */
+    /* border-radius: 4px; REMOVED - Applied to BG instead */
+    /* box-shadow: 0 0 25px rgba(0, 194, 55, 0.4); REMOVED - Applied to BG instead */
+    /* Brand Green Glow */
+    height: 1.5em;
+    /* Increased height to prevent clipping */
+    /* Slightly taller to prevent clipping */
+    white-space: nowrap;
+    z-index: 100;
+    backface-visibility: hidden;
+    /* Fix Safari flicker */
+    -webkit-font-smoothing: antialiased;
+    gap: 0.3em;
+    /* Use gap for spacing instead of elements */
+}
+
+/* The High-Speed Shine */
+.diya-super-box::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+    transform: skewX(-20deg);
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
+.diya-super-box span {
+    position: relative;
+    z-index: 20;
+    /* Keep text above shine */
+    display: inline-block;
+    transform: skewX(10deg);
+    font-weight: 900;
+}
+
+.direction-header p {
+    font-size: 1.25rem;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Main Content Grid */
+.direction-content {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    /* REMOVED completely */
+    width: 100%;
+    max-width: 1000px;
+    z-index: 10;
+    margin-bottom: 0rem;
+}
+
+/* ... */
+
+/* Frequency Section Specific */
+.frequency-section {
+    margin-top: -1rem;
+    /* Negative margin to pull it UP */
+    position: relative;
+    z-index: 5;
+    /* Ensure it stays clickable if overlapping */
+}
+
+/* Section Common */
+.direction-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    /* Reduced gap */
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111;
+    text-align: center;
+    margin: 0;
+}
+
+/* Platform Grid */
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.platform-card {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 20px;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+    height: 180px;
+}
+
+.platform-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border-color: #00c237;
+    /* Green Outline on Hover */
+}
+
+.platform-card.selected {
+    border-color: #00c237;
+    background: #f0fff4;
+    box-shadow: 0 10px 30px rgba(0, 194, 55, 0.15);
+}
+
+.platform-icon {
+    font-size: 2.5rem;
+    transition: transform 0.3s ease;
+}
+
+.platform-card.selected .platform-icon {
+    transform: scale(1.1);
+}
+
+.platform-name {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.check-indicator {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 24px;
+    height: 24px;
+    background: #00c237;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.9rem;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.platform-card.selected .check-indicator {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Frequency Section */
+.frequency-control {
+    background: #fff;
+    border: 1px solid #e1e1e1;
+    border-radius: 24px;
+    padding: 0.5rem;
+    display: flex;
+    position: relative;
+    width: fit-content;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.freq-toggle-btn {
+    padding: 1rem 2.5rem;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+    transition: color 0.3s ease;
+    border-radius: 100px;
+    /* Ensure hover shape */
+}
+
+.freq-toggle-btn.active {
+    color: #111;
+}
+
+.freq-slider-bg {
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    width: calc(50% - 0.5rem);
+    /* approximate */
+    background: #f1f1f1;
+    border-radius: 20px;
+    transition: transform 0.3s cubic-bezier(0.455, 0.03, 0.515, 0.955);
+    z-index: 1;
+}
+
+.freq-value-selector {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+    font-family: monospace;
+}
+
+.freq-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.freq-btn:hover {
+    background: #f5f5f5;
+    transform: scale(1.05);
+}
+
+.freq-display {
+    font-size: 3rem;
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    min-width: 120px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.freq-label {
+    font-size: 1rem;
+    color: #888;
+    margin-top: 0.5rem;
+}
+
+/* Delegation Action */
+.delegation-section {
+    margin-top: -1.5rem;
+    /* Negative margin to pull it UP */
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding-bottom: 0rem;
+    /* Reduced bottom space */
+}
+
+/* Loader Overlay */
+.planning-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.loader-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    margin-top: 2rem;
+    min-height: 1.5em;
+    text-align: center;
+}
+
+.loader-bar {
+    width: 200px;
+    height: 4px;
+    background: #eee;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.loader-progress {
+    width: 0%;
+    height: 100%;
+    background: #00c237;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .platform-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .direction-header h1 {
+        font-size: 2rem;
+    }
+}
+
+.diya-box-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    z-index: 1;
+    border-radius: 4px;
+    box-shadow: 0 0 25px rgba(0, 194, 55, 0.4);
+}

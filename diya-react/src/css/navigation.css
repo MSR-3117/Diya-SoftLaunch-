@@ -1,0 +1,204 @@
+/* Navigation System CSS */
+:root {
+    --nav-height: 80px;
+    --dock-height: 100px;
+    --nav-z-index: 1000;
+    --dock-z-index: 1000;
+}
+
+/* --- APP HEADER --- */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--nav-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3rem;
+    z-index: var(--nav-z-index);
+    pointer-events: none;
+    /* Let clicks pass through empty areas */
+}
+
+/* Logo Area */
+.app-header-logo {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    cursor: pointer;
+    text-decoration: none;
+    color: #111;
+    font-family: var(--font-heading, sans-serif);
+    font-weight: 700;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    transition: opacity 0.3s ease;
+}
+
+.app-header-logo:hover {
+    opacity: 0.7;
+}
+
+.app-header-logo img {
+    height: 32px;
+    width: auto;
+}
+
+/* Breadcrumbs / Progress */
+.app-phase-tracker {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.phase-item {
+    font-family: var(--font-body, sans-serif);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #999;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s ease;
+    cursor: default;
+}
+
+.phase-item.completed {
+    color: #111;
+    cursor: pointer;
+    position: relative;
+}
+
+.phase-item.completed:hover {
+    color: #00c237;
+}
+
+.phase-item.completed:hover::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background-color: currentColor;
+}
+
+.phase-item.active {
+    color: #00c237;
+    font-weight: 600;
+}
+
+.phase-separator {
+    color: #ddd;
+    font-size: 0.8rem;
+}
+
+/* User / Profile Placeholder */
+.app-user-profile {
+    pointer-events: auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.app-user-profile:hover {
+    transform: scale(1.05);
+    background: #e5e5e5;
+}
+
+
+/* --- ACTION DOCK --- */
+.action-dock-container {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--dock-z-index);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    box-shadow:
+        0 10px 40px -10px rgba(0, 0, 0, 0.1),
+        0 0 0 1px rgba(0, 0, 0, 0.2);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.action-dock-container.hidden {
+    transform: translate(-50%, 150%);
+    opacity: 0;
+}
+
+/* Back Button */
+.dock-back-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #fff;
+    color: #666;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dock-back-btn:hover {
+    background: #f5f5f5;
+    color: #111;
+    transform: scale(1.05);
+}
+
+.dock-back-btn:active {
+    transform: scale(0.95);
+}
+
+/* Main CTA Wrapper (keeps ModernButton styling intact) */
+.dock-main-action {
+    position: relative;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 0 1.5rem;
+        height: 70px;
+    }
+
+    .app-phase-tracker {
+        display: none;
+        /* Hide breadcrumbs on mobile to save space */
+    }
+
+    .action-dock-container {
+        width: calc(100% - 3rem);
+        justify-content: space-between;
+        bottom: 1.5rem;
+    }
+}

@@ -36,11 +36,7 @@ function getMinimapDays(year, month) {
 
 
 
-const CATEGORIES = [
-    { id: 'personal', name: 'Personal', color: '#FFB800' },
-    { id: 'work', name: 'Work', color: '#00c237' },
-    { id: 'health', name: 'Health', color: '#FF4D6A' },
-];
+
 
 export default function CalendarSidebar({ isOpen, onClose, currentDate, onDateSelect }) {
     const [minimapDate, setMinimapDate] = useState(currentDate || new Date());
@@ -131,7 +127,11 @@ export default function CalendarSidebar({ isOpen, onClose, currentDate, onDateSe
                 </h4>
                 <div className="platform-list">
                     {PLATFORMS_DATA.map(platform => (
-                        <label key={platform.id} className="platform-item">
+                        <label
+                            key={platform.id}
+                            className="platform-item"
+                            style={{ '--brand-color': platform.color }}
+                        >
                             <input
                                 type="checkbox"
                                 checked={selectedPlatforms.includes(platform.id)}
@@ -150,27 +150,10 @@ export default function CalendarSidebar({ isOpen, onClose, currentDate, onDateSe
                 </div>
             </div>
 
-            {/* Categories */}
-            <div className="sidebar-section">
-                <h4 className="sidebar-section-title">
-                    <span>Categories</span>
-                    <button className="section-toggle">⌄</button>
-                </h4>
-                <div className="category-list">
-                    {CATEGORIES.map(cat => (
-                        <div key={cat.id} className="category-item">
-                            <span className="category-dot" style={{ background: cat.color }}></span>
-                            <span className="category-name">{cat.name}</span>
-                            <div className="category-bar">
-                                <div className="category-progress" style={{ width: '60%', background: cat.color }}></div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+
 
             {/* Scheduling Controls */}
-            <div className="sidebar-section">
+            <div className="sidebar-section" style={{ marginTop: 'auto' }}>
                 <h4 className="sidebar-section-title">
                     <span>Schedule Settings</span>
                 </h4>

@@ -1,0 +1,817 @@
+/* ============================================
+   Connect Social Accounts — Premium Revamp
+   ============================================ */
+
+/* --- Page Container --- */
+.connect-socials-page {
+    min-height: 100vh;
+    width: 100%;
+    background:
+        radial-gradient(circle at 15% 15%, rgba(0, 194, 55, 0.03) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(10, 102, 194, 0.03) 0%, transparent 40%),
+        linear-gradient(180deg, #f8f9fa 0%, #eef1f5 100%);
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    /* Fix clipping - allow scroll if needed */
+    padding-bottom: 5rem;
+    /* Reduced bottom padding */
+    position: relative;
+    overflow: hidden;
+    /* Ensure pseud-elements don't overflow */
+}
+
+/* Animated Grid Background */
+.connect-socials-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    z-index: 0;
+    pointer-events: none;
+    animation: gridScroll 120s linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes gridScroll {
+    0% {
+        transform: translateY(0);
+    }
+
+    100% {
+        transform: translateY(50px);
+    }
+}
+
+/* --- Floating Abstract Shapes Layer (Refined) --- */
+.cs-shapes-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.cs-float-shape {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+    opacity: 0.6;
+}
+
+.cs-float-shape.circle-lg {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(0, 194, 55, 0.04), transparent 70%);
+    top: -100px;
+    right: -100px;
+    filter: blur(40px);
+}
+
+.cs-float-shape.circle-md {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(10, 102, 194, 0.04), transparent 70%);
+    bottom: -50px;
+    left: -50px;
+    filter: blur(30px);
+}
+
+/* --- Handwritten Decor Layer --- */
+.cs-handwritten-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.cs-hw-text {
+    font-family: 'Caveat', cursive;
+    position: absolute;
+    white-space: nowrap;
+    opacity: 0;
+    color: rgba(0, 0, 0, 0.3);
+    font-weight: 500;
+}
+
+.cs-hw-text.trust {
+    top: auto;
+    bottom: 5%;
+    /* Fixed to bottom to avoid content collision */
+    left: 5%;
+    font-size: 1.4rem;
+    transform: rotate(-6deg);
+}
+
+.cs-hw-text.easy {
+    top: 15%;
+    right: 5%;
+    font-size: 1.4rem;
+    transform: rotate(4deg);
+    color: rgba(0, 0, 0, 0.4);
+    /* Slightly darker for readability */
+}
+
+/* --- Header Section --- */
+.connect-header {
+    text-align: center;
+    padding: 100px 1.5rem 0;
+    position: relative;
+    z-index: 10;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.connect-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: #1a1a1a;
+    margin-bottom: 1.25rem;
+}
+
+.connect-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: #666;
+    font-weight: 400;
+    max-width: 700px;
+    /* Increased from 500px to fix wrapping */
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+/* Connected Counter Pill */
+.connect-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 100px;
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 0.85rem;
+    color: #555;
+    font-weight: 600;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.connect-counter.has-connections {
+    background: #f0fdf4;
+    border-color: rgba(0, 194, 55, 0.2);
+    color: #00802b;
+}
+
+.connect-counter .counter-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d1d5db;
+    transition: background 0.3s ease;
+}
+
+.connect-counter.has-connections .counter-dot {
+    background: #00c237;
+    box-shadow: 0 0 0 3px rgba(0, 194, 55, 0.15);
+}
+
+/* --- Platform Grid --- */
+
+.platform-card {
+    min-height: 280px;
+    /* Increased slightly for better breathability */
+    padding: 3rem 2rem !important;
+    /* Balanced padding top/bottom */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    /* Subtle Glass Border */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 4rem 2rem;
+    /* Compacted from 7rem to 4rem */
+    row-gap: 4rem;
+    max-width: 900px;
+    margin: 3rem auto 0;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* --- Premium Action Buttons --- */
+.platform-action-btn {
+    width: 100%;
+    width: 100%;
+    margin-top: auto;
+    /* Push to bottom but keep flexible */
+    padding: 0.8rem 1.5rem;
+    border-radius: 100px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-transform: capitalize;
+}
+
+/* Connect (Primary) */
+/* Connect (Primary) - Bold Outline */
+.platform-action-btn.connect {
+    background: transparent;
+    border: 1px solid #1a1a1a;
+    color: #1a1a1a;
+}
+
+.platform-action-btn.connect:hover {
+    background: transparent;
+    border-color: #00c237;
+    color: #00c237;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 194, 55, 0.15);
+}
+
+/* Disconnect (Destructive/Ghost) */
+/* Connected State (Green Success) */
+.platform-action-btn.disconnect {
+    background: #00c237;
+    border: 1px solid #00c237;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 194, 55, 0.25);
+}
+
+.platform-action-btn.disconnect:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    /* content: "Disconnect"; Removed invalid property */
+    /* Hint at destructive action */
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+/* Reconnect (Warning) */
+.platform-action-btn.reconnect {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #b45309;
+}
+
+.platform-action-btn.reconnect:hover {
+    background: #fef3c7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(252, 211, 77, 0.2);
+}
+
+/* --- Round 6 Fixes: Logo & Layout --- */
+
+/* Premium Logo Container */
+.platform-logo-container {
+    position: absolute;
+    top: -2rem;
+    /* Pull up to sit on the edge */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+    background: #fff;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+    z-index: 20;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.platform-card:hover .platform-logo-container {
+    transform: translateX(-50%) translateY(-4px) scale(1.05);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Ensure Button is fully visible (No Clipping) */
+.platform-card {
+    overflow: visible !important;
+    padding-bottom: 2rem !important;
+    /* Ensure space for button shadow */
+}
+
+/* ... existing code ... */
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(0, 194, 55, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 6px rgba(0, 194, 55, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 194, 55, 0);
+    }
+}
+
+/* Tablet/Mobile Adjustments */
+@media (max-width: 768px) {
+    .platform-grid {
+        grid-template-columns: 1fr;
+        gap: 3rem;
+        margin-top: 4rem;
+    }
+
+    .connect-title {
+        font-size: 2.5rem;
+    }
+
+    .connect-footer {
+        flex-direction: column;
+        gap: 2rem;
+        align-items: center;
+    }
+
+    .publishing-section {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .footer-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .connect-footer-btn {
+        width: 100%;
+    }
+}
+
+/* --- Round 3 Fixes --- */
+.connect-notice {
+    text-align: center;
+    max-width: 600px;
+    margin: 2rem auto;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.connect-footer {
+    max-width: 600px;
+    margin: 4rem auto 0;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 10;
+}
+
+/* Base Footer Button */
+.connect-footer-btn {
+    padding: 1rem 2rem;
+    border-radius: 100px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    letter-spacing: -0.01em;
+}
+
+/* Secondary (Back) - Glassmorphism */
+.connect-footer-btn.secondary {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    color: #555;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.connect-footer-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.9);
+    transform: translateX(-4px);
+    color: #1a1a1a;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.15);
+}
+
+/* Primary (Continue) - Vibrant Gradient */
+.connect-footer-btn.primary {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15), 0 1px 2px rgba(15, 23, 42, 0.2);
+}
+
+.connect-footer-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15, 23, 42, 0.25), 0 2px 4px rgba(15, 23, 42, 0.2);
+    /* Lighter gradient on hover */
+    background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+}
+
+/* --- Premium Messaging Components (Round 12) --- */
+
+.security-pill-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 5rem;
+    margin-bottom: 1rem;
+    position: relative;
+    z-index: 10;
+}
+
+.security-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 194, 55, 0.15);
+    border-radius: 100px;
+    box-shadow: 0 4px 12px rgba(0, 194, 55, 0.05);
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.security-pill:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 194, 55, 0.1);
+    border-color: rgba(0, 194, 55, 0.3);
+}
+
+.security-lock-icon {
+    font-size: 1rem;
+    color: #00c237;
+    /* Success Green */
+    animation: lockPulse 3s infinite ease-in-out;
+}
+
+@keyframes lockPulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.1);
+    }
+}
+
+.notice-banner-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 1.5rem auto 3rem;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 10;
+}
+
+.notice-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1.5rem;
+    background: linear-gradient(135deg, #fffbeb 0%, #fff 100%);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    /* Amber border */
+    border-radius: 16px;
+    font-size: 0.95rem;
+    color: #92400e;
+    /* Amber-800 */
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.08);
+}
+
+.notice-icon {
+    font-size: 1.1rem;
+    color: #f59e0b;
+    /* Amber-500 */
+}
+
+/* Safety Override for Logo Margin */
+/* Round 7 Fix: Removed negative margin override that broke alignment */
+/* .platform-logo { margin-top: -3.5rem !important; } REMOVED */
+
+/* CRITICAL FIX: Ensure logos are visible outside cards */
+.platform-card {
+    overflow: visible !important;
+    z-index: 10;
+}
+
+.platform-logo {
+    z-index: 50 !important;
+    /* Ensure on top of everything */
+}
+
+
+/************************************************************/
+/* Premium Spotlight OAuth Modal (Round 11 - Centered Fix) */
+/************************************************************/
+
+/* Overlay: Full Screen, Fixed, High Z-Index */
+.oauth-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Modal Container: Glass, Centered, Premium Shadow */
+.oauth-modal {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 3rem;
+    width: 100%;
+    max-width: 420px;
+    box-shadow:
+        0 20px 60px -10px rgba(0, 0, 0, 0.3),
+        0 10px 20px -5px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    animation: modalPopIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPopIn {
+    0% {
+        transform: scale(0.9) translateY(20px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Header Section */
+.oauth-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.oauth-platform-icon-lg {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.oauth-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+/* Form Styles */
+.oauth-form {
+    width: 100%;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.oauth-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.oauth-input-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: 0.25rem;
+}
+
+.oauth-input {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #1a1a1a;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.oauth-input:focus {
+    background: #fff;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.oauth-helper-text {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: -0.5rem;
+}
+
+/* Buttons */
+.oauth-primary-btn {
+    width: 100%;
+    padding: 0.9rem;
+    border-radius: 12px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 1rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.oauth-primary-btn:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.oauth-primary-btn.success {
+    background: #00c237;
+    /* Success Green */
+    margin-top: 1.5rem;
+}
+
+/* Progress & Success */
+.oauth-progress-container,
+.oauth-success-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.oauth-spinner-ring {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(0, 0, 0, 0.08);
+    /* Light grey track */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.oauth-progress-bar-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.oauth-progress-bar-fill {
+    height: 100%;
+    transition: width 0.4s ease;
+    border-radius: 10px;
+}
+
+.oauth-status-text {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.oauth-success-icon {
+    width: 64px;
+    height: 64px;
+    background: #00c237;
+    color: #fff;
+    font-size: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 8px 24px rgba(0, 194, 55, 0.25);
+}
+
+.oauth-desc {
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.5;
+}
+
+/* --- Premium Success Animation (Round 13) --- */
+.oauth-success-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 1rem 0;
+}
+
+.oauth-success-logo {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    margin-bottom: 0.5rem;
+    /* Initial state handled by GSAP */
+}
+
+.success-icon-svg {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+}
+
+.oauth-success-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    letter-spacing: -0.02em;
+    margin: 0;
+}
+
+.oauth-desc {
+    font-size: 1rem;
+    color: #475569;
+    line-height: 1.5;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+/* Premium Done Button */
+.oauth-primary-btn.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #16a34a;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    font-weight: 700;
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.oauth-primary-btn.success:hover {
+    background: rgba(34, 197, 94, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    border-color: rgba(34, 197, 94, 0.4);
+}

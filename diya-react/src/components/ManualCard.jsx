@@ -1,8 +1,11 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function ManualCard() {
+    const navigate = useNavigate();
+
     return (
-        <a href="#" className="manual-card">
+        <div className="manual-card" onClick={() => navigate('/brand-builder')} role="button" tabIndex={0}>
             <div className="manual-content">
                 <h3>No Website?</h3>
                 <p>Build your brand identity manually.</p>
@@ -13,6 +16,6 @@ export default function ManualCard() {
                     <path d="M12 5l7 7-7 7"></path>
                 </svg>
             </div>
-        </a>
+        </div>
     );
 }

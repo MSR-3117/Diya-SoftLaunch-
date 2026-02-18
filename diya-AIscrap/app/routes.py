@@ -27,39 +27,64 @@ def analyze_brand():
             # Scrape brand information from website
             brand_data = scrape_brand_from_url(url)
             
-            # Fetch additional assets from BrandFetch
-            # Safely extract brand name from URL (handle missing protocol)
-            try:
-                from urllib.parse import urlparse
-                parsed = urlparse(url if url.startswith('http') else f'https://{url}')
-                domain = parsed.netloc or parsed.path.split('/')[0]
-                brand_name = brand_data.get('name') or domain.replace('www.', '').split('.')[0]
-            except:
-                brand_name = brand_data.get('name', 'brand')
+            # Smart merge: prioritize scraped data for colors/fonts
+            brand_name = brand_data.get('name')
+            if not brand_name or brand_name.lower() == 'unknown':
+                try:
+                    from urllib.parse import urlparse
+                    parsed = urlparse(url if url.startswith('http') else f'https://{url}')
+                    domain = parsed.netloc or parsed.path.split('/')[0]
+                    brand_name = domain.replace('www.', '').split('.')[0].title()
+                except:
+                    brand_name = 'Your Brand'
+            
+            brand_data['name'] = brand_name
             brand_assets = fetch_brand_assets(brand_name)
             
             # Smart merge: prioritize scraped data for colors/fonts, but allow BrandFetch logo
             if brand_assets.get('logo', {}).get('url'):
                  brand_data['logo_url'] = brand_assets['logo']['url']
                  
-            # Only use BrandFetch colors/fonts if we failed to scrape any
-            # And ensure we format it correctly as a list if we do use it
-            if not brand_data.get('colors') and brand_assets.get('colors'):
-                # Convert dict to list
-                colors_dict = brand_assets['colors']
-                brand_data['colors'] = list(colors_dict.values())
+            # MERGE COLORS: Convert BrandFetch colors (dict) to [hex, label] format
+            bf_colors = []
+            if brand_assets.get('colors'):
+                for label, hex_val in brand_assets['colors'].items():
+                    if hex_val:
+                        bf_colors.append((hex_val, label.title()))
             
-            if not brand_data.get('fonts') and brand_assets.get('fonts'):
-                fonts_dict = brand_assets['fonts']
-                brand_data['fonts'] = list(fonts_dict.values())
+            # Combine: Scraped first, then unique BrandFetch colors
+            scraped_colors = brand_data.get('colors') or []
+            scraped_hexes = [c[0].lower() for c in scraped_colors if isinstance(c, (list, tuple)) and len(c) > 0]
             
+            for bf_c in bf_colors:
+                if bf_c[0].lower() not in scraped_hexes:
+                    scraped_colors.append(bf_c)
+            brand_data['colors'] = scraped_colors
+
+            # MERGE FONTS
+            scraped_fonts = brand_data.get('fonts') or []
+            bf_fonts = list(brand_assets.get('fonts', {}).values())
+            for f in bf_fonts:
+                if f and f not in scraped_fonts:
+                    scraped_fonts.append(f)
+            brand_data['fonts'] = scraped_fonts
+
+            # MERGE EXTRA METADATA
+            if not brand_data.get('tagline') and brand_assets.get('brand_guidelines', {}).get('tagline'):
+                brand_data['tagline'] = brand_assets['brand_guidelines']['tagline']
+            
+            if brand_assets.get('brand_guidelines'):
+                brand_data['industry'] = brand_assets['brand_guidelines'].get('industry', brand_data.get('industry', ''))
+                brand_data['mission'] = brand_assets['brand_guidelines'].get('mission', '')
+                brand_data['values'] = brand_assets['brand_guidelines'].get('values', [])
+
         elif source == 'manual':
             brand_data = {
                 'name': data.get('brandName', ''),
                 'description': data.get('brandDescription', ''),
                 'industry': data.get('industry', ''),
                 'tagline': data.get('tagline', ''),
-                'colors': data.get('colors', []),
+                'colors': data.get('colors', []), # Expected [hex, label] from manual UI too
                 'fonts': data.get('fonts', []),
                 'logo_url': data.get('logoUrl', '')
             }

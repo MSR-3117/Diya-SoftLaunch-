@@ -77,8 +77,17 @@ class AssetExtractor:
     def __init__(self):
         self.gemini_service = GeminiService()
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                          "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "DNT": "1",
+            "Connection": "keep-alive",
+            "Upgrade-Insecure-Requests": "1",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1"
         }
 
     async def extract_assets(self, url: str) -> BrandAssets:
@@ -338,6 +347,10 @@ class AssetExtractor:
         
         final_strategy = StrategicAnalysis(**self._normalize_strategy(raw_strategy))
 
+        # FINAL FALLBACK for name
+        if not company_name:
+            domain = urlparse(final_url).netloc.replace("www.", "").split(".")[0]
+            company_name = domain.title()
 
         total_time = time.time() - start_time
         print(f"\n{'─'*60}")
@@ -349,14 +362,14 @@ class AssetExtractor:
         return BrandAssets(
             website_url=final_url,
             company_name=company_name,
-            company_summary=executive_summary or f"Brand analysis for {company_name}",
+            company_summary=executive_summary or f"A comprehensive brand analysis for {company_name}.",
             logo=logo,
             colors=colors,
             fonts=fonts,
             favicon_url=favicon,
             meta_description=meta_description,
             extraction_timestamp=datetime.now().isoformat(),
-            brand_vibe=vibe,
+            brand_vibe=vibe or ["Professional", "Modern"],
             strategy=final_strategy,
         )
 
@@ -678,11 +691,16 @@ class AssetExtractor:
     # ═══════════════════════════════════════════════════════
 
     def _extract_company_name(self, soup: BeautifulSoup) -> str:
+        """Extract company name with multiple fallbacks."""
         if not soup:
-            return "Unknown"
+            return ""
+        
+        # 1. Try OpenGraph
         og_name = soup.find("meta", property="og:site_name")
         if og_name and og_name.get("content"):
             return og_name["content"].strip()
+            
+        # 2. Try Title Tag (extract shortest part)
         if soup.title and soup.title.string:
             raw = soup.title.string.strip()
             for sep in ["|", " - ", " – ", " — ", ":"]:
@@ -690,9 +708,11 @@ class AssetExtractor:
                     parts = [p.strip() for p in raw.split(sep)]
                     valid = [p for p in parts if len(p) > 1]
                     if valid:
+                        # Pick the shortest valid part (usually the brand name)
                         return min(valid, key=len)
             return raw[:50]
-        return "Unknown Company"
+            
+        return "" # Return empty string, let the caller handle domain fallback
 
     def _extract_description(self, soup: BeautifulSoup) -> str:
         if not soup:
@@ -789,7 +809,14 @@ class AssetExtractor:
             except Exception:
                 continue
 
-        # --- Priority 2: apple-touch-icon (high-res, most sites have it) ---
+        # --- Priority 2: SVGs in header/logo containers ---
+        header_svgs = soup.select("header svg, nav svg, .logo svg, .navbar svg, #logo svg")
+        if header_svgs:
+            # For SVGs, we might not get a URL easily if it's inline, 
+            # but we can at least note the presence or try to find a background-image URL
+            pass 
+
+        # --- Priority 3: apple-touch-icon (high-res, most sites have it) ---
         apple_icon = soup.find("link", rel=lambda x: x and isinstance(x, list)
                                and any("apple-touch-icon" in r.lower() for r in x))
         if not apple_icon:
@@ -800,19 +827,25 @@ class AssetExtractor:
             if resolved:
                 return resolved
 
-        # --- Priority 3: og:image (social sharing image) ---
+        # --- Priority 4: og:image (social sharing image) ---
         og_image = soup.find("meta", property="og:image")
         if og_image and og_image.get("content"):
             resolved = resolve_url(og_image["content"])
             if resolved:
                 return resolved
 
-        # --- Priority 4: Google Favicon API (128px, always works) ---
+        # --- Priority 5: Clearbit Logo Fallback (High Reliability) ---
         try:
-            parsed = urlparse(base_url)
-            domain = parsed.netloc or parsed.hostname
+            domain = urlparse(base_url).netloc.replace("www.", "")
             if domain:
-                domain = domain.replace("www.", "")
+                return f"https://logo.clearbit.com/{domain}"
+        except:
+            pass
+
+        # --- Priority 6: Google Favicon API (128px, always works) ---
+        try:
+            domain = urlparse(base_url).netloc.replace("www.", "")
+            if domain:
                 return (f"https://t3.gstatic.com/faviconV2?client=SOCIAL"
                         f"&type=FAVICON&fallback_opts=TYPE,SIZE,URL"
                         f"&url=https://{domain}&size=128")
