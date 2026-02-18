@@ -1,7 +1,12 @@
 // API Service for DIYA React Frontend
 // Communicates with brand_content_studio Flask backend
 
-const API_BASE_URL = 'http://localhost:5001';
+// When VITE_API_URL is set, use it. Otherwise use relative URLs (same origin).
+// For unified deploy (diya-deploy), leave VITE_API_URL unset so API calls go to same server.
+const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
+// Debug: log the API URL on load (visible in browser console)
+console.log('[DIYA] API Base URL:', API_BASE_URL || '(relative - same origin)');
 
 /**
  * Analyze brand from URL

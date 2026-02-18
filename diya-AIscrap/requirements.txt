@@ -1,0 +1,13 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+openai==1.61.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
+# AI Scraping (from Simbli)
+playwright==1.49.1
+google-generativeai==0.8.4
+httpx==0.28.1
+pydantic==2.10.5
+Pillow==11.1.0

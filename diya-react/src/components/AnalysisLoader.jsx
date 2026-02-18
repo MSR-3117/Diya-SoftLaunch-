@@ -34,18 +34,29 @@ export default function AnalysisLoader() {
         analysisStarted.current = true;
 
         if (!url) {
-            // No URL provided, go back to intake
             navigate('/brand-intake');
             return;
         }
 
         setIsAnalyzing(true);
+        console.log("Starting brand analysis for:", url);
 
-        // Call the API
         analyzeBrand(url)
             .then(() => {
-                // Success - navigation will be triggered in the animation
+                console.log("Analysis successful!");
                 setIsAnalyzing(false);
+
+                // Animate out and navigate
+                gsap.to(containerRef.current, {
+                    opacity: 0,
+                    scale: 0.95,
+                    duration: 0.8,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        console.log("Navigating to Persona page...");
+                        navigate('/brand-persona');
+                    }
+                });
             })
             .catch((err) => {
                 console.error('Brand analysis failed:', err);
@@ -54,9 +65,9 @@ export default function AnalysisLoader() {
             });
     }, [url, analyzeBrand, navigate]);
 
-    // Loading text animation - cycles through steps while API is working
+    // Cleanup effect for text animation
     useLayoutEffect(() => {
-        if (apiError) return; // Don't animate if there's an error
+        if (apiError || !isAnalyzing) return;
 
         const ctx = gsap.context(() => {
             const tl = gsap.timeline({ repeat: -1 });
@@ -72,7 +83,7 @@ export default function AnalysisLoader() {
                     )
                     .to(textRef.current, {
                         opacity: 1,
-                        duration: 2 // Hold for 2 seconds per step
+                        duration: 2
                     })
                     .to(textRef.current, {
                         opacity: 0,
@@ -84,25 +95,10 @@ export default function AnalysisLoader() {
         }, containerRef);
 
         return () => ctx.revert();
-    }, [apiError]);
+    }, [apiError, isAnalyzing]);
 
-    // Watch for successful analysis completion
-    useEffect(() => {
-        // If analysis is complete (not analyzing, no error) and we have data
-        if (!isAnalyzing && !apiError && analysisStarted.current) {
-            // Small delay to ensure animations look smooth
-            const timer = setTimeout(() => {
-                gsap.to(containerRef.current, {
-                    opacity: 0,
-                    scale: 0.95,
-                    duration: 0.8,
-                    ease: "power2.inOut",
-                    onComplete: () => navigate('/brand-persona')
-                });
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [isAnalyzing, apiError, navigate]);
+    // Removed the complex useEffect watcher for navigation
+
 
     // Render error state
     if (apiError) {
